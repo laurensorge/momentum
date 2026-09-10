@@ -9,7 +9,17 @@
     <meta name="apple-mobile-web-app-title" content="Momentum" />
     <title>Momentum</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        background: #090903;
+      }
+      a, button { color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
