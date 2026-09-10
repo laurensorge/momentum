@@ -1,16 +1,10 @@
 import { useState, useEffect } from "react";
 
-// ─── 4-WEEK PROGRESSIVE WORKOUTS ──────────────────────────────────────────
-// Goals: grow glutes, lose weight, keep arms AND shoulders small
-// Split: MWF lower body, TTh back/rear delts/core (no arm isolation, minimal shoulder pressing)
-// Progresses each week, cycles every 4 weeks
-
 const WEEK_LABELS = ["Base", "Build", "Peak", "Deload"];
 
 const WORKOUTS = {
-  // ─── DAY 1: MONDAY — GLUTES & HAMSTRINGS (HEAVY) ───
   day1: [
-    [ // Week 1
+    [
       { name: "Barbell Hip Thrust", sets: "4×10", notes: "Pause 2s at top. Find your working weight." },
       { name: "Romanian Deadlift (BB)", sets: "4×12", notes: "Hinge at hips, feel hamstrings stretch." },
       { name: "Bulgarian Split Squat (DB)", sets: "3×10 ea", notes: "Lean forward slightly for glute bias." },
@@ -19,7 +13,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "3×15", notes: "Lean forward for upper glute." },
       { name: "Incline Walk", sets: "15 min", notes: "10-12% grade, 3.0-3.5 mph" },
     ],
-    [ // Week 2
+    [
       { name: "Barbell Hip Thrust", sets: "4×10", notes: "Add 5 lbs from last week." },
       { name: "Romanian Deadlift (BB)", sets: "4×12", notes: "+5 lbs or add 1 rep per set." },
       { name: "Bulgarian Split Squat (DB)", sets: "3×12 ea", notes: "+2 reps per leg vs week 1." },
@@ -28,7 +22,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "3×20", notes: "+5 reps. Push through the burn." },
       { name: "Incline Walk", sets: "15 min", notes: "12% grade, 3.5 mph" },
     ],
-    [ // Week 3 — Peak
+    [
       { name: "Barbell Hip Thrust", sets: "5×8", notes: "Add a 5th set. Heaviest weight yet." },
       { name: "Romanian Deadlift (BB)", sets: "4×10", notes: "Heavier weight, fewer reps." },
       { name: "Bulgarian Split Squat (DB)", sets: "4×10 ea", notes: "Add a 4th set this week." },
@@ -37,7 +31,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "3×20", notes: "Heavy. Lean forward hard." },
       { name: "Incline Walk", sets: "15 min", notes: "12-15% grade — push it." },
     ],
-    [ // Week 4 — Deload
+    [
       { name: "Barbell Hip Thrust", sets: "3×12", notes: "60% of week 3 weight. Focus on squeeze." },
       { name: "Romanian Deadlift (DB)", sets: "3×12", notes: "Dumbbells, lighter. Perfect your hinge." },
       { name: "Bodyweight Walking Lunge", sets: "3×12 ea", notes: "Long strides, no weight needed." },
@@ -47,10 +41,8 @@ const WORKOUTS = {
       { name: "Incline Walk", sets: "20 min", notes: "10% grade, easy pace. Enjoy it." },
     ],
   ],
-
-  // ─── DAY 2: TUESDAY — BACK & REAR DELTS ───
   day2: [
-    [ // Week 1
+    [
       { name: "Lat Pulldown (wide)", sets: "3×12", notes: "Squeeze lats, don't yank with arms." },
       { name: "Seated Cable Row", sets: "3×12", notes: "Pull to lower chest, squeeze blades." },
       { name: "Face Pulls", sets: "3×15", notes: "Light weight, high reps, rear delts." },
@@ -59,7 +51,7 @@ const WORKOUTS = {
       { name: "Plank Hold", sets: "3×30s", notes: "Tight core, don't sag." },
       { name: "Incline Walk", sets: "10 min", notes: "10-12% grade, 3.0-3.5 mph" },
     ],
-    [ // Week 2
+    [
       { name: "Lat Pulldown (wide)", sets: "3×15", notes: "+3 reps. Same weight as week 1." },
       { name: "Seated Cable Row", sets: "3×15", notes: "+3 reps. Full retraction each rep." },
       { name: "Face Pulls", sets: "3×20", notes: "+5 reps. External rotate at the end." },
@@ -68,7 +60,7 @@ const WORKOUTS = {
       { name: "Dead Bug", sets: "3×10 ea", notes: "Core stability. Press back into floor." },
       { name: "Incline Walk", sets: "10 min", notes: "12% grade, 3.5 mph" },
     ],
-    [ // Week 3 — Peak
+    [
       { name: "Lat Pulldown (neutral grip)", sets: "4×12", notes: "Add a set + different grip angle." },
       { name: "Seated Cable Row", sets: "4×12", notes: "Heavier than week 2. 4 sets." },
       { name: "Face Pulls", sets: "4×15", notes: "Extra set. Rear delt focus." },
@@ -77,7 +69,7 @@ const WORKOUTS = {
       { name: "Plank Hold", sets: "3×45s", notes: "+15s vs week 1. Don't forget to breathe." },
       { name: "Incline Walk", sets: "10 min", notes: "12-15% grade." },
     ],
-    [ // Week 4 — Deload
+    [
       { name: "Lat Pulldown (wide)", sets: "2×15", notes: "Light. Feel the stretch." },
       { name: "Seated Cable Row", sets: "2×15", notes: "Light. Focus on form." },
       { name: "Face Pulls", sets: "3×15", notes: "Same as week 1. Just maintain." },
@@ -87,10 +79,8 @@ const WORKOUTS = {
       { name: "Incline Walk", sets: "15 min", notes: "Easy pace. Recovery." },
     ],
   ],
-
-  // ─── DAY 3: WEDNESDAY — QUADS & GLUTES ───
   day3: [
-    [ // Week 1
+    [
       { name: "Barbell Squat", sets: "4×10", notes: "Below parallel. Wide stance = more glute." },
       { name: "Leg Press (high & wide)", sets: "4×12", notes: "Feet high on platform for glute bias." },
       { name: "Walking Lunges (DB)", sets: "3×12 ea", notes: "Long stride, lean slightly forward." },
@@ -99,7 +89,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "2×20", notes: "Burnout to finish." },
       { name: "Incline Walk", sets: "15 min", notes: "10-12% grade, 3.0-3.5 mph" },
     ],
-    [ // Week 2
+    [
       { name: "Barbell Squat", sets: "4×12", notes: "+2 reps per set. Same weight." },
       { name: "Leg Press (high & wide)", sets: "4×15", notes: "+3 reps. Push through." },
       { name: "Walking Lunges (DB)", sets: "3×15 ea", notes: "+3 reps per leg." },
@@ -108,7 +98,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "3×20", notes: "Add a 3rd set." },
       { name: "Incline Walk", sets: "15 min", notes: "12% grade, 3.5 mph" },
     ],
-    [ // Week 3 — Peak
+    [
       { name: "Barbell Squat", sets: "5×8", notes: "5th set! Heavier weight, fewer reps." },
       { name: "Leg Press (high & wide)", sets: "4×15", notes: "Add weight. Push hard." },
       { name: "Reverse Lunge (DB)", sets: "3×12 ea", notes: "Swap from walking. More glute focus." },
@@ -117,7 +107,7 @@ const WORKOUTS = {
       { name: "Hip Abductor Machine", sets: "3×20", notes: "Heavy. Lean forward." },
       { name: "Incline Walk", sets: "15 min", notes: "12-15% grade — push it." },
     ],
-    [ // Week 4 — Deload
+    [
       { name: "Goblet Squat", sets: "3×12", notes: "Light DB. Depth over weight." },
       { name: "Leg Press (high & wide)", sets: "3×15", notes: "60% of week 3 weight." },
       { name: "Bodyweight Lunges", sets: "3×10 ea", notes: "No weight. Focus on balance." },
@@ -127,10 +117,8 @@ const WORKOUTS = {
       { name: "Incline Walk", sets: "20 min", notes: "Easy pace. Enjoy it." },
     ],
   ],
-
-  // ─── DAY 4: THURSDAY — BACK & POSTURE (light shoulders, no pressing) ───
   day4: [
-    [ // Week 1
+    [
       { name: "Lat Pulldown (neutral)", sets: "3×12", notes: "Different grip than Tuesday." },
       { name: "DB Lateral Raise (light)", sets: "3×15", notes: "8-10 lbs MAX. Shape only." },
       { name: "Cable Face Pull", sets: "3×15", notes: "Rear delt focus. Elbows high." },
@@ -139,7 +127,7 @@ const WORKOUTS = {
       { name: "Dead Bug", sets: "3×10 ea", notes: "Core stability. Slow." },
       { name: "Incline Walk", sets: "10 min", notes: "10-12% grade, 3.0-3.5 mph" },
     ],
-    [ // Week 2
+    [
       { name: "Lat Pulldown (neutral)", sets: "3×15", notes: "+3 reps. Same weight." },
       { name: "DB Lateral Raise (light)", sets: "3×18", notes: "Same 8-10 lbs. More reps only." },
       { name: "Cable Face Pull", sets: "3×20", notes: "+5 reps. Hold the squeeze." },
@@ -148,7 +136,7 @@ const WORKOUTS = {
       { name: "Plank Hold", sets: "3×40s", notes: "Core work. Tight and still." },
       { name: "Incline Walk", sets: "10 min", notes: "12% grade, 3.5 mph" },
     ],
-    [ // Week 3 — Peak
+    [
       { name: "Lat Pulldown (wide)", sets: "4×12", notes: "Extra set. Wide grip." },
       { name: "DB Lateral Raise (light)", sets: "4×15", notes: "Extra set. Still 8-10 lbs." },
       { name: "Cable Face Pull", sets: "4×15", notes: "4 sets this week." },
@@ -157,7 +145,7 @@ const WORKOUTS = {
       { name: "Dead Bug", sets: "3×12 ea", notes: "+2 reps per side vs week 1." },
       { name: "Incline Walk", sets: "10 min", notes: "12-15% grade." },
     ],
-    [ // Week 4 — Deload
+    [
       { name: "Lat Pulldown (neutral)", sets: "2×15", notes: "Light. Stretch at top." },
       { name: "DB Lateral Raise (light)", sets: "2×15", notes: "5-8 lbs. Easy." },
       { name: "Cable Face Pull", sets: "3×12", notes: "Light. Maintain form." },
@@ -167,10 +155,8 @@ const WORKOUTS = {
       { name: "Incline Walk", sets: "15 min", notes: "Easy pace." },
     ],
   ],
-
-  // ─── DAY 5: FRIDAY — GLUTE BURNOUT & POSTERIOR CHAIN ───
   day5: [
-    [ // Week 1
+    [
       { name: "Hip Thrust (lighter)", sets: "4×15", notes: "Lighter than Monday. Chase the burn." },
       { name: "Sumo Deadlift", sets: "3×12", notes: "Wide stance, squeeze glutes at lockout." },
       { name: "Cable Kickback", sets: "3×15 ea", notes: "Superset with abductors ↓" },
@@ -180,7 +166,7 @@ const WORKOUTS = {
       { name: "Single-Leg RDL (DB)", sets: "3×12 ea", notes: "Balance + glute/hamstring." },
       { name: "Incline Walk", sets: "15 min", notes: "12-15% grade — push it!" },
     ],
-    [ // Week 2
+    [
       { name: "Hip Thrust (lighter)", sets: "4×20", notes: "+5 reps per set. Same weight." },
       { name: "Sumo Deadlift", sets: "3×15", notes: "+3 reps. Squeeze hard." },
       { name: "Cable Kickback", sets: "3×15 ea", notes: "Add 5 lbs. Superset ↓" },
@@ -190,7 +176,7 @@ const WORKOUTS = {
       { name: "Single-Leg RDL (DB)", sets: "3×12 ea", notes: "Add 2.5-5 lbs." },
       { name: "Incline Walk", sets: "15 min", notes: "15% grade." },
     ],
-    [ // Week 3 — Peak
+    [
       { name: "Hip Thrust (moderate)", sets: "5×12", notes: "5 sets! More weight than wk1-2." },
       { name: "Sumo Deadlift", sets: "4×10", notes: "Extra set. Heavier." },
       { name: "Cable Kickback", sets: "3×15 ea", notes: "Heaviest cable yet. Superset ↓" },
@@ -200,7 +186,7 @@ const WORKOUTS = {
       { name: "Single-Leg RDL (DB)", sets: "3×15 ea", notes: "+3 reps. Same weight." },
       { name: "Incline Walk", sets: "15 min", notes: "15% grade — finish strong!" },
     ],
-    [ // Week 4 — Deload
+    [
       { name: "Hip Thrust (bodyweight)", sets: "3×20", notes: "No weight. Squeeze and hold 2s." },
       { name: "Banded Sumo Squat", sets: "3×15", notes: "Band + bodyweight only." },
       { name: "Cable Kickback (light)", sets: "2×12 ea", notes: "Easy. Feel the muscle." },
@@ -222,7 +208,99 @@ const DAY_CONFIG = {
   6: { type: null, label: "Active Recovery", emoji: "🧘", msg: "Walk, stretch, or yoga. Move gently." },
 };
 
-// ─── KETO MEALS ───────────────────────────────────────────────────────────
+// ─── ALTERNATIVE WORKOUTS (for swap) ─────────────────────────────────────
+const ALT_WORKOUTS = [
+  {
+    id: "glute-pump",
+    label: "Glutes",
+    title: "Glute Pump",
+    desc: "High-rep burnout, no barbell needed",
+    exercises: [
+      { name: "Banded Glute Bridge", sets: "4×25", notes: "Band above knees. Feel every rep." },
+      { name: "Hip Abductor Machine", sets: "4×20", notes: "Slow eccentric. Lean forward." },
+      { name: "Cable Kickback", sets: "3×15 ea", notes: "Squeeze hard at top." },
+      { name: "Frog Pump", sets: "3×20", notes: "Feet together, knees out, hold 1s at top." },
+      { name: "Sumo Squat (DB)", sets: "3×15", notes: "Heavy DB, wide stance." },
+      { name: "Step-Up (DB)", sets: "3×12 ea", notes: "Drive through heel for glute bias." },
+      { name: "Incline Walk", sets: "15 min", notes: "12% grade, steady pace." },
+    ],
+  },
+  {
+    id: "lower-cardio",
+    label: "Cardio",
+    title: "Lower Body Cardio",
+    desc: "Fat burn + legs — no heavy lifting",
+    exercises: [
+      { name: "Incline Walk", sets: "20 min", notes: "12-15% grade, 3.5 mph." },
+      { name: "Bodyweight Squat", sets: "3×20", notes: "Fast pace, minimal rest." },
+      { name: "Walking Lunge", sets: "3×15 ea", notes: "Long stride, full range." },
+      { name: "Jump Rope (or march)", sets: "3×60s", notes: "High knees if no rope." },
+      { name: "Glute Bridge Burnout", sets: "1×50", notes: "Bodyweight, as fast as controlled." },
+      { name: "Stair Climber", sets: "10 min", notes: "Steady pace, push through heels." },
+    ],
+  },
+  {
+    id: "core-focus",
+    label: "Core",
+    title: "Core & Stability",
+    desc: "Abs, posture, and anti-rotation work",
+    exercises: [
+      { name: "Dead Bug", sets: "3×12 ea", notes: "Press back into floor. Slow." },
+      { name: "Pallof Press", sets: "3×12 ea", notes: "Anti-rotation. Stay square." },
+      { name: "Plank Hold", sets: "3×45s", notes: "Breathe steadily. Don't sag." },
+      { name: "Side Plank", sets: "3×30s ea", notes: "Stack feet or stagger for easier option." },
+      { name: "Hollow Hold", sets: "3×20s", notes: "Lower back pressed down, legs low." },
+      { name: "Cable Woodchop", sets: "3×12 ea", notes: "Rotate from core, not arms." },
+      { name: "Back Extension", sets: "3×15", notes: "Bodyweight. Feel your lower back." },
+    ],
+  },
+  {
+    id: "full-body-light",
+    label: "Full Body",
+    title: "Full Body Light",
+    desc: "Active recovery — move without crushing yourself",
+    exercises: [
+      { name: "Goblet Squat", sets: "3×12", notes: "Light DB. Focus on depth." },
+      { name: "DB Romanian Deadlift", sets: "3×12", notes: "Light weight. Hinge pattern." },
+      { name: "Seated Cable Row", sets: "3×12", notes: "Moderate. Feel the squeeze." },
+      { name: "Banded Glute Bridge", sets: "3×20", notes: "Light band. Mind-muscle." },
+      { name: "Face Pulls", sets: "3×15", notes: "Light. Posture and rear delts." },
+      { name: "Plank Hold", sets: "3×30s", notes: "Easy effort." },
+      { name: "Incline Walk", sets: "20 min", notes: "Easy pace. Let your body breathe." },
+    ],
+  },
+  {
+    id: "posterior-chain",
+    label: "Glutes",
+    title: "Posterior Chain",
+    desc: "Back of body — glutes, hamstrings, lats",
+    exercises: [
+      { name: "Romanian Deadlift (DB)", sets: "4×12", notes: "Feel the hamstring stretch." },
+      { name: "Single-Leg RDL", sets: "3×10 ea", notes: "Slow and balanced." },
+      { name: "Back Extension (glute)", sets: "3×15", notes: "Round upper back, squeeze glutes up." },
+      { name: "Lying Hamstring Curl", sets: "3×12", notes: "Control the negative." },
+      { name: "Lat Pulldown", sets: "3×12", notes: "Wide grip, squeeze at bottom." },
+      { name: "Cable Kickback", sets: "3×15 ea", notes: "Slow. Squeeze at top." },
+      { name: "Incline Walk", sets: "15 min", notes: "12% grade." },
+    ],
+  },
+  {
+    id: "stretch-yoga",
+    label: "Flexibility",
+    title: "Stretch & Mobility",
+    desc: "Recovery day — open your hips and hamstrings",
+    exercises: [
+      { name: "Hip Flexor Stretch", sets: "3×45s ea", notes: "Low lunge. Sink deep." },
+      { name: "Pigeon Pose", sets: "3×60s ea", notes: "The glute stretch that actually works." },
+      { name: "Hamstring Stretch (standing)", sets: "3×45s ea", notes: "Hinge forward, flat back." },
+      { name: "Cat-Cow", sets: "3×10", notes: "Slow and controlled. Breathe into it." },
+      { name: "90/90 Hip Stretch", sets: "3×45s ea", notes: "External and internal rotation." },
+      { name: "Child's Pose", sets: "3×45s", notes: "Arms extended, breathe into hips." },
+      { name: "Incline Walk", sets: "15 min", notes: "Easy pace. Blood flow." },
+    ],
+  },
+];
+
 const MEALS = {
   0: [
     { type: "Breakfast", title: "Protein Shake + Bacon", desc: "Quick rest-day fuel", recipe: "1 scoop low-carb whey + unsweetened almond milk + ice, blended. Side of 2 strips bacon, cooked crispy." },
@@ -264,17 +342,56 @@ const MEALS = {
 const DAYS = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 const DAYS_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const FILTER_LABELS = ["All", "Glutes", "Cardio", "Core", "Full Body", "Flexibility"];
 
-// ─── ICONS (matching Figma) ───────────────────────────────────────────────
 const I = {
   home: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10.5z"/><path d="M9 22V14h6v8"/></svg>,
   nutrition: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>,
-  community: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
   check: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   back: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>,
   right: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>,
   down: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>,
+  swap: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>,
+  search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
 };
+
+// ─── WORKOUT CARD (reusable) ──────────────────────────────────────────────
+function WorkoutCard({ title, tag, desc, onStart, isSwap, isScheduled }) {
+  return (
+    <div style={{
+      ...S.card, padding: 16, flexShrink: 0, width: 220, display: "flex",
+      flexDirection: "column", justifyContent: "space-between", gap: 12,
+      border: isScheduled ? "1px solid rgba(221,251,36,0.25)" : "0.5px solid rgba(255,255,255,0.12)",
+    }}>
+      <div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+          <span style={S.pill}>{tag}</span>
+          {isScheduled && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Scheduled</span>}
+        </div>
+        <p style={{ ...S.h5, marginBottom: 4 }}>{title}</p>
+        <p style={{ ...S.xs, color: "#656565", lineHeight: 1.5 }}>{desc}</p>
+      </div>
+      <button onClick={onStart} style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: isSwap ? "rgba(221,251,36,0.08)" : "#DDFB24",
+        border: isSwap ? "1px solid rgba(221,251,36,0.3)" : "none",
+        borderRadius: 12, padding: "8px 8px 8px 14px",
+        cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
+      }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: isSwap ? "#DDFB24" : "#000" }}>
+          {isSwap ? "Swap In" : "Start"}
+        </span>
+        <span style={{
+          background: isSwap ? "#DDFB24" : "#000", borderRadius: 100,
+          width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center",
+          color: isSwap ? "#000" : "#fff",
+        }}>
+          {isSwap ? I.swap : I.right}
+        </span>
+      </button>
+    </div>
+  );
+}
 
 // ─── APP ──────────────────────────────────────────────────────────────────
 export default function App() {
@@ -284,6 +401,10 @@ export default function App() {
   const [completed, setCompleted] = useState({});
   const [startDate, setStartDate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [swappedWorkout, setSwappedWorkout] = useState(null); // { dateKey, altId }
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [detailWorkout, setDetailWorkout] = useState(null); // alt workout being viewed
 
   const now = new Date();
   const dow = now.getDay();
@@ -292,22 +413,32 @@ export default function App() {
   const dateKey = now.toISOString().split("T")[0];
   const donesToday = completed[dateKey] || [];
 
-  // Week calc: cycles 1-4 based on start date
   const getWeek = () => {
     if (!startDate) return 0;
     const diff = Math.floor((now - new Date(startDate)) / 86400000);
     return Math.max(0, Math.min(3, Math.floor(diff / 7) % 4));
   };
   const weekIdx = getWeek();
-  const exercises = dc.type ? (WORKOUTS[dc.type]?.[weekIdx] || []) : [];
-  const pct = exercises.length > 0 ? Math.round((donesToday.length / exercises.length) * 100) : 0;
+
+  // Resolve today's exercises — either scheduled or swapped
+  const todaySwap = swappedWorkout?.dateKey === dateKey ? swappedWorkout.altId : null;
+  const swappedAlt = todaySwap ? ALT_WORKOUTS.find(a => a.id === todaySwap) : null;
+  const scheduledExercises = dc.type ? (WORKOUTS[dc.type]?.[weekIdx] || []) : [];
+  const todayExercises = swappedAlt ? swappedAlt.exercises : scheduledExercises;
+  const todayTitle = swappedAlt ? swappedAlt.title : dc.label;
+  const todayTag = swappedAlt ? swappedAlt.label : dc.tag;
+  const pct = todayExercises.length > 0 ? Math.round((donesToday.length / todayExercises.length) * 100) : 0;
+
+  // For viewing a specific day
+  const viewDayExercises = viewDay !== null
+    ? (DAY_CONFIG[viewDay].type ? (WORKOUTS[DAY_CONFIG[viewDay].type]?.[weekIdx] || []) : [])
+    : [];
 
   useEffect(() => {
     try {
-      const done = localStorage.getItem("m:done");
-      if (done) setCompleted(JSON.parse(done));
-      const start = localStorage.getItem("m:start");
-      if (start) setStartDate(start);
+      const done = localStorage.getItem("m:done"); if (done) setCompleted(JSON.parse(done));
+      const start = localStorage.getItem("m:start"); if (start) setStartDate(start);
+      const swap = localStorage.getItem("m:swap"); if (swap) setSwappedWorkout(JSON.parse(swap));
     } catch {}
     setLoading(false);
   }, []);
@@ -325,23 +456,93 @@ export default function App() {
     try { localStorage.setItem("m:start", dateKey); } catch {}
   };
 
-  if (loading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh" }}>Loading...</p></div>;
+  const swapWorkout = (altId) => {
+    const s = { dateKey, altId };
+    setSwappedWorkout(s);
+    try { localStorage.setItem("m:swap", JSON.stringify(s)); } catch {}
+    // Clear today's completions since workout changed
+    const u = { ...completed, [dateKey]: [] };
+    setCompleted(u);
+    try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
+    setTab("home");
+    setDetailWorkout(null);
+  };
 
-  // ── ONBOARDING ──
+  const clearSwap = () => {
+    setSwappedWorkout(null);
+    try { localStorage.removeItem("m:swap"); } catch {}
+    const u = { ...completed, [dateKey]: [] };
+    setCompleted(u);
+    try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
+  };
+
+  const filteredAlts = ALT_WORKOUTS.filter(a => {
+    const matchFilter = activeFilter === "All" || a.label === activeFilter;
+    const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.desc.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  if (loading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading...</p></div>;
+
   if (!startDate) return (
     <div style={S.wrap}>
       <div style={{ padding: "80px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 24, textAlign: "center" }}>
         <div style={{ fontSize: 56 }}>⚡</div>
         <h1 style={{ ...S.h2, margin: 0 }}>Momentum</h1>
-        <p style={{ ...S.sm, color: "#ADADAD", maxWidth: 280 }}>Glute-focused workouts + keto meals, personalized for you. Ready every day you open it.</p>
+        <p style={{ ...S.sm, color: "#ADADAD", maxWidth: 280 }}>Glute-focused workouts + keto meals, personalized for you.</p>
         <button style={S.btnPrimary} onClick={begin}>Let's Go</button>
       </div>
     </div>
   );
 
+  // ── ALT WORKOUT DETAIL ──
+  if (detailWorkout) {
+    const alt = ALT_WORKOUTS.find(a => a.id === detailWorkout);
+    const isCurrentSwap = todaySwap === alt.id;
+    return (
+      <div style={S.wrap}>
+        <div style={{ padding: "16px" }}>
+          <button onClick={() => setDetailWorkout(null)} style={S.btnBack}>{I.back} Back</button>
+          <div style={{ marginTop: 16 }}>
+            <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>{alt.label}</span>
+            <h1 style={{ ...S.h2, marginTop: 4 }}>{alt.title}</h1>
+            <p style={{ ...S.sm, color: "#ADADAD", marginTop: 4 }}>{alt.desc}</p>
+          </div>
+          {!isCurrentSwap ? (
+            <button onClick={() => swapWorkout(alt.id)} style={{ ...S.btnPrimary, marginTop: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <span style={{ color: "#000" }}>{I.swap}</span> Swap in for Today
+            </button>
+          ) : (
+            <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, background: "rgba(221,251,36,0.08)", border: "1px solid rgba(221,251,36,0.3)", borderRadius: 14, padding: "12px 16px", textAlign: "center" }}>
+                <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600 }}>✓ Today's workout</span>
+              </div>
+              <button onClick={clearSwap} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 14, padding: "12px 16px", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12 }}>
+                Undo
+              </button>
+            </div>
+          )}
+          <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+            {alt.exercises.map((ex, idx) => (
+              <div key={idx} style={{ ...S.card, padding: "14px 16px" }}>
+                <p style={{ ...S.sm, fontWeight: 700 }}>{ex.name}</p>
+                <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
+                <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ height: 100 }} />
+        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      </div>
+    );
+  }
+
   // ── NUTRITION TAB ──
   if (tab === "nutrition") {
-    const meals = MEALS[activeDay] || MEALS[0];
+    const mealDay = viewDay !== null ? viewDay : dow;
+    const meals = MEALS[mealDay] || MEALS[0];
     return (
       <div style={S.wrap}>
         <div style={{ padding: "24px 16px 12px" }}>
@@ -351,14 +552,14 @@ export default function App() {
         <div style={{ padding: "4px 16px 12px", display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           {[0,1,2,3,4,5,6].map(d => (
             <button key={d} onClick={() => { setViewDay(d); setExpandedMeal(null); }}
-              style={{ ...S.chip, ...(activeDay === d ? S.chipOn : {}), flexShrink: 0 }}>
+              style={{ ...S.chip, ...(mealDay === d ? S.chipOn : {}), flexShrink: 0 }}>
               <span style={{ fontSize: 10, fontWeight: 600, lineHeight: 1 }}>{DAYS[d]}</span>
-              {d === dow && <span style={{ width: 4, height: 4, borderRadius: 2, background: activeDay === d ? "#DDFB24" : "#656565" }} />}
+              {d === dow && <span style={{ width: 4, height: 4, borderRadius: 2, background: mealDay === d ? "#DDFB24" : "#656565" }} />}
             </button>
           ))}
         </div>
         <div style={{ padding: "8px 16px" }}>
-          <h3 style={{ ...S.h5, marginBottom: 4 }}>{DAYS_FULL[activeDay]}</h3>
+          <h3 style={{ ...S.h5, marginBottom: 4 }}>{DAYS_FULL[mealDay]}</h3>
           <p style={{ ...S.xs, color: "#656565", marginBottom: 16 }}>Tap a meal to see the full recipe</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {meals.map((m, i) => {
@@ -385,37 +586,146 @@ export default function App() {
           </div>
         </div>
         <div style={{ height: 120 }} />
-        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} />
+        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
       </div>
     );
   }
 
-  // ── COMMUNITY TAB (placeholder) ──
-  if (tab === "community") return (
-    <div style={S.wrap}>
-      <div style={{ padding: "80px 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 48 }}>👥</div>
-        <h2 style={{ ...S.h3, marginTop: 16 }}>Community</h2>
-        <p style={{ ...S.sm, color: "#ADADAD", marginTop: 8 }}>Coming soon. This is where challenges and friends will live.</p>
-      </div>
-      <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} />
-    </div>
-  );
+  // ── EXPLORE WORKOUTS TAB ──
+  if (tab === "explore") {
+    return (
+      <div style={S.wrap}>
+        <div style={{ padding: "24px 16px 12px" }}>
+          <h1 style={S.h2}>Workouts</h1>
+          <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 4 }}>Swap today's plan or preview any session</p>
+        </div>
 
-  // ── WORKOUT DETAIL (when a day is tapped) ──
-  if (viewDay !== null && exercises.length > 0) {
+        {/* Today's plan reminder */}
+        <div style={{ padding: "0 16px 8px" }}>
+          <div style={{ ...S.card, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(221,251,36,0.15)" }}>
+            <div>
+              <p style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, marginBottom: 2 }}>TODAY'S PLAN</p>
+              <p style={{ ...S.sm, fontWeight: 700 }}>{todayTitle}</p>
+              {todaySwap && <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 2 }}>Swapped from scheduled</p>}
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {todaySwap && (
+                <button onClick={clearSwap} style={{ ...S.xs, color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                  Reset
+                </button>
+              )}
+              <button onClick={() => { setViewDay(dow); setTab("home"); }} style={{ background: "#DDFB24", border: "none", borderRadius: 10, padding: "8px 8px 8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: "#000" }}>
+                View
+                <span style={{ background: "#000", borderRadius: 100, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>{I.right}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div style={{ padding: "8px 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "10px 16px" }}>
+            <span style={{ color: "#656565" }}>{I.search}</span>
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search workouts"
+              style={{ background: "none", border: "none", outline: "none", color: "#fff", fontFamily: "'DM Sans',sans-serif", fontSize: 14, flex: 1 }}
+            />
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ padding: "4px 16px 12px", display: "flex", gap: 8, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          {FILTER_LABELS.map(f => (
+            <button key={f} onClick={() => setActiveFilter(f)} style={{
+              flexShrink: 0, padding: "8px 14px", borderRadius: 40, cursor: "pointer",
+              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600,
+              background: activeFilter === f ? "#DDFB24" : "rgba(255,255,255,0.05)",
+              color: activeFilter === f ? "#000" : "#fff",
+              border: activeFilter === f ? "none" : "1px solid #525252",
+            }}>{f}</button>
+          ))}
+        </div>
+
+        {/* Workout cards */}
+        <div style={{ padding: "4px 16px" }}>
+          <h3 style={{ ...S.h5, marginBottom: 12 }}>
+            {activeFilter === "All" ? "All Workouts" : activeFilter} {searchQuery && `· "${searchQuery}"`}
+          </h3>
+          {filteredAlts.length === 0 ? (
+            <p style={{ ...S.sm, color: "#656565", padding: "20px 0" }}>No workouts match that filter.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {filteredAlts.map(alt => {
+                const isActive = todaySwap === alt.id;
+                return (
+                  <div key={alt.id} style={{
+                    ...S.card, padding: 16,
+                    border: isActive ? "1px solid rgba(221,251,36,0.3)" : "0.5px solid rgba(255,255,255,0.12)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                          <span style={S.pill}>{alt.label}</span>
+                          {isActive && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Today's pick</span>}
+                        </div>
+                        <p style={{ ...S.sm, fontWeight: 700 }}>{alt.title}</p>
+                        <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{alt.desc}</p>
+                        <p style={{ ...S.xs, color: "#525252", marginTop: 4 }}>{alt.exercises.length} exercises</p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <button onClick={() => setDetailWorkout(alt.id)} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600, color: "#fff" }}>
+                        Preview
+                      </button>
+                      {!isActive ? (
+                        <button onClick={() => swapWorkout(alt.id)} style={{ flex: 1, background: "#DDFB24", border: "none", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 700, color: "#000", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <span style={{ color: "#000" }}>{I.swap}</span> Swap In
+                        </button>
+                      ) : (
+                        <button onClick={clearSwap} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(221,251,36,0.3)", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600, color: "#DDFB24" }}>
+                          Undo Swap
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div style={{ height: 120 }} />
+        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      </div>
+    );
+  }
+
+  // ── WORKOUT DETAIL (scheduled day) ──
+  if (viewDay !== null && viewDayExercises.length > 0) {
+    const vdc = DAY_CONFIG[viewDay];
     const isToday = viewDay === dow;
+    const exs = isToday ? todayExercises : viewDayExercises;
+    const ttl = isToday ? todayTitle : vdc.label;
+    const tg = isToday ? todayTag : vdc.tag;
     return (
       <div style={S.wrap}>
         <div style={{ padding: "16px" }}>
           <button onClick={() => setViewDay(null)} style={S.btnBack}>{I.back} Back</button>
           <div style={{ marginTop: 16 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>{dc.tag}</span>
+              <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>{tg}</span>
               <span style={{ ...S.xs, color: "#302F2F" }}>·</span>
               <span style={{ ...S.xs, color: "#8C8C8C" }}>Week {weekIdx + 1} — {WEEK_LABELS[weekIdx]}</span>
             </div>
-            <h1 style={{ ...S.h2, marginTop: 6 }}>{dc.emoji} {dc.label}</h1>
+            <h1 style={{ ...S.h2, marginTop: 6 }}>{vdc.emoji} {ttl}</h1>
+            {isToday && todaySwap && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <span style={{ ...S.xs, color: "#8C8C8C" }}>Swapped from scheduled ·</span>
+                <button onClick={clearSwap} style={{ ...S.xs, color: "#DDFB24", background: "none", border: "none", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", padding: 0 }}>Undo</button>
+              </div>
+            )}
             {isToday && (
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
                 <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
@@ -424,16 +734,14 @@ export default function App() {
                 <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600 }}>{pct}%</span>
               </div>
             )}
-            {!isToday && <p style={{ ...S.xs, color: "#656565", marginTop: 8 }}>Preview — check off exercises on the day</p>}
+            {!isToday && <p style={{ ...S.xs, color: "#656565", marginTop: 8 }}>Preview — check off exercises on the actual day</p>}
           </div>
-
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
-            {exercises.map((ex, idx) => {
+            {exs.map((ex, idx) => {
               const done = isToday && donesToday.includes(idx);
               return (
                 <div key={idx} onClick={() => isToday && toggle(idx)}
-                  style={{ ...S.card, padding: "14px 16px", display: "flex", gap: 12, cursor: isToday ? "pointer" : "default",
-                    opacity: done ? 0.4 : 1, transition: "opacity 0.3s" }}>
+                  style={{ ...S.card, padding: "14px 16px", display: "flex", gap: 12, cursor: isToday ? "pointer" : "default", opacity: done ? 0.4 : 1, transition: "opacity 0.3s" }}>
                   {isToday && (
                     <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
                       border: done ? "none" : "1.5px solid rgba(255,255,255,0.15)",
@@ -459,23 +767,30 @@ export default function App() {
           )}
         </div>
         <div style={{ height: 120 }} />
-        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} />
+        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
       </div>
     );
   }
 
   // ── HOME ──
   const todayConf = DAY_CONFIG[dow];
-  const todayExercises = todayConf.type ? (WORKOUTS[todayConf.type]?.[weekIdx] || []) : [];
-
   return (
     <div style={S.wrap}>
-      <div style={{ padding: "24px 16px 12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 15 }}>☀️</span>
+      <div style={{ padding: "20px 16px 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <svg width="36" height="36" viewBox="0 0 95 95" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="7.5" y="5" width="80" height="80" rx="8" fill="black"/>
+            <path d="M65.5 34.4067H70.5V58.093H65.5V34.4067Z" fill="#DDFB24"/>
+            <path d="M73 40.0322H78V52.4675H73V40.0322Z" fill="#DDFB24"/>
+            <path d="M29.5 58.0931H24.5L24.5 34.4067L29.5 34.4067L29.5 58.0931Z" fill="#DDFB24"/>
+            <path d="M22 52.4676H17L17 40.0323L22 40.0323L22 52.4676Z" fill="#DDFB24"/>
+            <path d="M39.5 49.4067L32 49.4067V42.9067L39.5 42.9067V49.4067Z" fill="#DDFB24"/>
+            <path d="M63 49.4067H55.5V42.9067L63 42.9067V49.4067Z" fill="#DDFB24"/>
+            <path d="M39.8091 49.4067V40.9382L47.3108 54.3933H47.9412L55.1908 41.0488V49.4067H59.6666V31.9067H55.0647L47.689 45.9516L39.9982 31.9067H35.3333V49.4067H39.8091Z" fill="#DDFB24"/>
+          </svg>
           <span style={{ ...S.xs, color: "#ADADAD", fontWeight: 600, letterSpacing: 1 }}>{DAYS[dow]}  {now.getDate()} {MONTHS[now.getMonth()]}</span>
         </div>
-        <h1 style={{ ...S.h2, marginTop: 8 }}>Let's Crush Today's Goals!</h1>
+        <h1 style={{ ...S.h2, marginTop: 12 }}>Let's Crush Today's Goals!</h1>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(221,251,36,0.06)", borderRadius: 20, padding: "5px 14px", marginTop: 10 }}>
           <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600 }}>Week {weekIdx + 1}: {WEEK_LABELS[weekIdx]}</span>
           <span style={{ ...S.xs, color: "#302F2F" }}>·</span>
@@ -483,7 +798,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Today's card */}
+      {/* Today's Workout */}
       <div style={{ padding: "8px 16px" }}>
         {!todayConf.type ? (
           <div style={{ ...S.card, padding: 28, textAlign: "center" }}>
@@ -495,10 +810,11 @@ export default function App() {
           <button onClick={() => setViewDay(dow)}
             style={{ ...S.card, padding: 20, width: "100%", textAlign: "left", cursor: "pointer", border: "1px solid rgba(221,251,36,0.12)" }}>
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <span style={S.pill}>{todayConf.tag}</span>
+              <span style={S.pill}>{todayTag}</span>
               <span style={S.pill}>{todayExercises.length} exercises</span>
+              {todaySwap && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Swapped</span>}
             </div>
-            <h3 style={S.h3}>{todayConf.emoji} {todayConf.label}</h3>
+            <h3 style={S.h3}>{todayConf.emoji} {todayTitle}</h3>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 100, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
@@ -514,6 +830,42 @@ export default function App() {
           </button>
         )}
       </div>
+
+      {/* Explore Workouts section */}
+      {todayConf.type && (
+        <div style={{ padding: "16px 0 8px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", marginBottom: 12 }}>
+            <h3 style={S.h4}>Explore Workouts</h3>
+            <button onClick={() => setTab("explore")} style={{ background: "none", border: "none", color: "#DDFB24", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+              View All {I.right}
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "4px 16px", WebkitOverflowScrolling: "touch" }}>
+            {ALT_WORKOUTS.slice(0, 4).map(alt => {
+              const isActive = todaySwap === alt.id;
+              return (
+                <button key={alt.id} onClick={() => setDetailWorkout(alt.id)}
+                  style={{ ...S.card, padding: 16, flexShrink: 0, width: 200, display: "flex",
+                    flexDirection: "column", justifyContent: "space-between", gap: 10, textAlign: "left",
+                    cursor: "pointer", border: isActive ? "1px solid rgba(221,251,36,0.3)" : "0.5px solid rgba(255,255,255,0.12)" }}>
+                  <div>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                      <span style={S.pill}>{alt.label}</span>
+                      {isActive && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Active</span>}
+                    </div>
+                    <p style={{ ...S.sm, fontWeight: 700, color: "#fff" }}>{alt.title}</p>
+                    <p style={{ ...S.xs, color: "#656565", marginTop: 4, lineHeight: 1.5 }}>{alt.desc}</p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#DDFB24" }}>
+                    <span style={{ ...S.xs, fontWeight: 600, color: "#DDFB24" }}>View workout</span>
+                    <span style={{ color: "#DDFB24" }}>{I.right}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Week */}
       <div style={{ padding: "16px 16px 0" }}>
@@ -541,17 +893,29 @@ export default function App() {
       </div>
 
       <div style={{ height: 120 }} />
-      <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} />
+      <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
     </div>
   );
 }
 
-// ─── BOTTOM NAV ───────────────────────────────────────────────────────────
-function Nav({ tab, setTab, setViewDay }) {
-  const items = [
-    { id: "home", icon: I.home },
-    { id: "nutrition", icon: I.nutrition },
-  ];
+// ─── BOTTOM NAV (3 tabs: Home, Nutrition, Explore) ────────────────────────
+const NAV_ICONS = {
+  home: {
+    default: <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.6835 24.2335L10.6611 21.6556C10.661 20.7456 11.4029 20.0061 12.3221 20H15.6892C16.6128 20 17.3616 20.7413 17.3616 21.6556L17.384 24.2446C17.3838 25.0172 18.0067 25.6487 18.787 25.6668H21.0317C23.2694 25.6668 25.0834 23.871 25.0834 21.6556V11.4776C25.0715 10.6061 24.6581 9.78774 23.9611 9.25537L16.2841 3.13301C14.9392 2.06699 13.0273 2.06699 11.6824 3.13301L4.03911 9.26648C3.33938 9.79669 2.92537 10.6164 2.91675 11.4887V21.6556C2.91675 23.871 4.73077 25.6668 6.96848 25.6668H9.2132C10.0128 25.6668 10.6611 25.0251 10.6611 24.2335" stroke="#656565" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/><path d="M10.6057 16.2046H17.3948" stroke="#656565" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    active: <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M10.6678 20.6675V24.2455H10.626C10.626 24.6241 10.4738 24.9871 10.2031 25.2538C9.93248 25.5206 9.56578 25.6691 9.18442 25.6663H6.94895C4.72203 25.6663 2.91675 23.874 2.91675 21.6631V11.5098C2.93723 10.6392 3.35161 9.82397 4.04493 9.29043L11.6497 3.20262C12.968 2.07518 14.9083 2.04032 16.2669 3.11965L24.0388 9.29043C24.7008 9.84017 25.0834 10.653 25.0834 11.5098V21.6735C25.0834 22.7342 24.6583 23.7514 23.9018 24.5005C23.1453 25.2496 22.1197 25.6691 21.0512 25.6663H18.7635C17.9714 25.6606 17.3324 25.0215 17.3324 24.2351V20.6675C17.3324 19.7567 16.5888 19.0185 15.6715 19.0185H12.3183C11.405 19.0242 10.6678 19.7608 10.6678 20.6675ZM10.6058 12.9961C10.1225 12.9961 9.73075 13.3878 9.73075 13.8711C9.73075 14.3543 10.1225 14.7461 10.6058 14.7461H17.3948C17.8781 14.7461 18.2698 14.3543 18.2698 13.8711C18.2698 13.3878 17.8781 12.9961 17.3948 12.9961H10.6058Z" fill="#DDFB24"/></svg>,
+  },
+  nutrition: {
+    default: <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.6883 11.4891C29.0076 11.6487 29.0874 12.0478 28.8878 12.3671L26.2938 16.2781C24.9768 18.2336 22.9814 18.9918 20.8663 18.3533L12.3658 27.2928C12.0465 27.612 11.5676 27.8515 11.1286 27.8515C11.0887 27.8515 11.0488 27.8515 11.0089 27.8515C10.5699 27.8515 10.1708 27.6919 9.89147 27.4125L9.01349 26.5345C8.69422 26.2153 8.53459 25.7763 8.53459 25.2974C8.57449 24.8584 8.77404 24.3795 9.13321 24.0602L18.0727 15.5597C17.4341 13.4047 18.1525 11.4891 20.108 10.1721L24.0589 7.53815C24.3782 7.33861 24.7374 7.41843 24.9369 7.7377C25.1365 8.01705 25.0566 8.41614 24.7773 8.61568L20.8264 11.2097C19.23 12.2872 18.7511 13.7239 19.4296 15.5198L19.5493 15.9189L10.0112 24.9781C9.89147 25.0978 9.85156 25.2175 9.81165 25.3772C9.81165 25.4969 9.85156 25.5767 9.93138 25.6565L10.7695 26.4946C10.8493 26.5744 10.9291 26.6143 11.0488 26.5744C11.1685 26.5744 11.3282 26.4946 11.4479 26.4148L20.5071 16.8368L20.9062 16.9964C22.6621 17.6749 24.1387 17.1561 25.2163 15.5597L27.8103 11.6487C28.0099 11.3694 28.4089 11.2895 28.6883 11.4891ZM11.7273 19.5905C11.6873 19.5905 11.6075 19.5905 11.5277 19.5506C7.81624 18.1937 6.61899 15.1207 6.2199 13.4446C5.741 11.2097 6.06027 8.77531 6.97816 7.85742C7.25752 7.57806 7.69651 7.41843 8.17541 7.45834C8.57449 7.45834 8.97358 7.65788 9.29284 7.97715L16.2768 14.6418C16.5163 14.8813 16.5163 15.2804 16.2768 15.5597C16.0374 15.7992 15.6383 15.7992 15.3988 15.5597L8.37495 8.89504C8.29514 8.77531 8.17541 8.7354 8.05569 8.7354C8.01578 8.7354 7.93596 8.7354 7.85614 8.77531C7.45706 9.1744 6.97816 10.9703 7.45706 13.1652C7.81624 14.6019 8.81394 17.196 11.9667 18.3533C12.286 18.473 12.4456 18.8322 12.3259 19.1515C12.2461 19.4308 12.0066 19.5905 11.7273 19.5905ZM21.6245 19.7501L25.775 23.701C26.5732 24.5391 26.653 25.7763 25.9346 26.4946L25.0566 27.3726C24.7374 27.6919 24.2984 27.8515 23.8195 27.8515C23.7796 27.8515 23.7796 27.8515 23.7796 27.8515C23.1809 27.8515 22.6222 27.612 22.2231 27.1331L18.3121 23.3818C18.0727 23.1423 18.0727 22.7432 18.3121 22.4639C18.5516 22.2244 18.9507 22.2244 19.23 22.4639L23.141 26.2552C23.3406 26.4547 23.58 26.5744 23.7796 26.5744C23.8993 26.6143 24.0589 26.5744 24.1387 26.4547L25.0167 25.5767C25.2562 25.3772 25.1764 24.9382 24.8571 24.6189L20.7465 20.668C20.4672 20.4285 20.4672 20.0295 20.7066 19.7501C20.9461 19.5107 21.3452 19.5107 21.6245 19.7501ZM20.986 13.684C20.7465 13.4047 20.7864 13.0056 21.0259 12.7661L25.336 8.93495C25.5754 8.6955 25.9745 8.7354 26.214 8.97485C26.4534 9.25421 26.4534 9.6533 26.1741 9.89275L21.9039 13.7239C21.7842 13.8437 21.6245 13.8836 21.4649 13.8836C21.3053 13.8836 21.1057 13.8038 20.986 13.684ZM22.8617 15.5198C22.5823 15.2804 22.5424 14.8813 22.7819 14.6418L26.6131 10.3317C26.8525 10.0923 27.2915 10.0524 27.531 10.2918C27.8103 10.5313 27.8103 10.9304 27.5709 11.2097L23.7397 15.4799C23.6199 15.6395 23.4603 15.6795 23.2608 15.6795C23.1011 15.6795 22.9814 15.6395 22.8617 15.5198Z" fill="#656565"/></svg>,
+    active: <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.85385 24.8584L13.8823 20.0295L16.4364 22.5038L11.5676 27.5721C11.3681 27.7717 11.1286 27.8515 10.8892 27.8515C10.6098 27.8914 10.3704 27.7717 10.1708 27.5721L8.85385 26.2552C8.65431 26.0556 8.53459 25.8162 8.57449 25.5368C8.57449 25.2974 8.65431 25.0579 8.85385 24.8584ZM28.7282 11.1698C29.0076 11.3694 29.0475 11.7285 28.8878 12.0079L26.6929 15.879C25.9346 17.0762 24.7374 17.7946 23.3805 17.9542C22.6222 18.034 21.864 17.8744 21.1855 17.5951L19.9085 18.912L26.1342 24.8983C26.5332 25.2575 26.5332 25.8561 26.1342 26.2552L24.8172 27.5721C24.6176 27.7717 24.3782 27.8914 24.0988 27.8515C23.8195 27.8515 23.58 27.7318 23.4204 27.5721L14.1617 18.5129C4.90293 19.0318 5.30201 9.33403 6.89834 7.7377C7.25752 7.33861 7.85614 7.33861 8.25523 7.7377L17.4741 16.5574L18.8309 15.2405C18.5516 14.562 18.3919 13.8038 18.4718 13.0455C18.6314 11.6886 19.3497 10.4914 20.5071 9.73311L24.4181 7.53815C24.6975 7.37852 25.0566 7.41843 25.2562 7.69779C25.4557 7.93724 25.4158 8.29641 25.1764 8.53586L21.1057 12.6065L21.6245 13.0854L26.1342 9.37394C26.3736 9.1744 26.7727 9.2143 26.9722 9.41385C27.2117 9.6533 27.2516 10.0524 27.0521 10.2918L23.3406 14.8015L23.8195 15.3203L27.8901 11.2496C28.1296 11.0102 28.4888 10.9703 28.7282 11.1698Z" fill="#DDFB24"/></svg>,
+  },
+  explore: {
+    default: <svg width="36" height="32" viewBox="0 0 36 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M29.9927 14.9598C30.3211 14.9598 30.6495 15.279 30.6495 15.5983C30.6495 15.9575 30.3211 16.2368 29.9927 16.2368H29.3359V19.4295C29.3359 20.507 28.4329 21.3451 27.3656 21.3451H26.0521C25.8058 21.3451 25.6005 21.3052 25.3953 21.2653V21.9836C25.3953 23.0612 24.4922 23.8992 23.425 23.8992H22.1114C21.0031 23.8992 20.1411 23.0612 20.1411 21.9836V16.2368H14.8869V21.9836C14.8869 23.0612 13.9838 23.8992 12.9165 23.8992H11.603C10.4947 23.8992 9.63264 23.0612 9.63264 21.9836V21.2653C9.42739 21.3052 9.1811 21.3451 8.97586 21.3451H7.6623C6.55399 21.3451 5.69197 20.507 5.69197 19.4295V16.2368H5.0352C4.66576 16.2368 4.37842 15.9575 4.37842 15.5983C4.37842 15.279 4.66576 14.9598 5.0352 14.9598H5.69197V11.7671C5.69197 10.7295 6.55399 9.8515 7.6623 9.8515H8.97586C9.1811 9.8515 9.42739 9.93131 9.63264 9.97122V9.21296C9.63264 8.17535 10.4947 7.29736 11.603 7.29736H12.9165C13.9838 7.29736 14.8869 8.17535 14.8869 9.21296V14.9598H20.1411V9.21296C20.1411 8.17535 21.0031 7.29736 22.1114 7.29736H23.425C24.4922 7.29736 25.3953 8.17535 25.3953 9.21296V9.97122C25.6005 9.93131 25.8058 9.8515 26.0521 9.8515H27.3656C28.4329 9.8515 29.3359 10.7295 29.3359 11.7671V14.9598H29.9927ZM9.63264 19.4295V11.7671C9.63264 11.4478 9.30425 11.1286 8.97586 11.1286H7.6623C7.29287 11.1286 7.00553 11.4478 7.00553 11.7671V19.4295C7.00553 19.7887 7.29287 20.068 7.6623 20.068H8.97586C9.30425 20.068 9.63264 19.7887 9.63264 19.4295ZM13.5733 21.9836V9.21296C13.5733 8.8937 13.2449 8.57443 12.9165 8.57443H11.603C11.2335 8.57443 10.9462 8.8937 10.9462 9.21296V21.9836C10.9462 22.3428 11.2335 22.6222 11.603 22.6222H12.9165C13.2449 22.6222 13.5733 22.3428 13.5733 21.9836ZM24.0817 21.9836V9.21296C24.0817 8.8937 23.7533 8.57443 23.425 8.57443H22.1114C21.742 8.57443 21.4546 8.8937 21.4546 9.21296V21.9836C21.4546 22.3428 21.742 22.6222 22.1114 22.6222H23.425C23.7533 22.6222 24.0817 22.3428 24.0817 21.9836ZM28.0224 19.4295V11.7671C28.0224 11.4478 27.694 11.1286 27.3656 11.1286H26.0521C25.6826 11.1286 25.3953 11.4478 25.3953 11.7671V19.4295C25.3953 19.7887 25.6826 20.068 26.0521 20.068H27.3656C27.694 20.068 28.0224 19.7887 28.0224 19.4295Z" fill="#656565"/></svg>,
+    active: <svg width="36" height="35" viewBox="0 0 36 35" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.89376 11.2496C9.41257 11.2496 9.85156 11.6886 9.85156 12.2074V23.0625C9.85156 23.6212 9.41257 24.0203 8.89376 24.0203H6.97816C6.41944 24.0203 6.02036 23.6212 6.02036 23.0625V18.912C5.30201 18.912 4.74329 18.3533 4.74329 17.635C4.74329 16.9565 5.30201 16.3579 6.02036 16.3579V12.2074C6.02036 11.6886 6.41944 11.2496 6.97816 11.2496H8.89376ZM22.9415 8.6955C23.4603 8.6955 23.8993 9.13449 23.8993 9.6533V25.6166C23.8993 26.1753 23.4603 26.5744 22.9415 26.5744H21.0259C20.4672 26.5744 20.0681 26.1753 20.0681 25.6166V18.912H14.9598V25.6166C14.9598 26.1753 14.5208 26.5744 14.002 26.5744H12.0864C11.5277 26.5744 11.1286 26.1753 11.1286 25.6166V9.6533C11.1286 9.13449 11.5277 8.6955 12.0864 8.6955H14.002C14.5208 8.6955 14.9598 9.13449 14.9598 9.6533V16.3579H20.0681V9.6533C20.0681 9.13449 20.4672 8.6955 21.0259 8.6955H22.9415ZM29.0076 16.3579C29.686 16.3579 30.2846 16.9565 30.2846 17.635C30.2846 18.3533 29.686 18.912 29.0076 18.912V23.0625C29.0076 23.6212 28.5686 24.0203 28.0498 24.0203H26.1342C25.5754 24.0203 25.1764 23.6212 25.1764 23.0625V12.2074C25.1764 11.6886 25.5754 11.2496 26.1342 11.2496H28.0498C28.5686 11.2496 29.0076 11.6886 29.0076 12.2074V16.3579Z" fill="#DDFB24"/></svg>,
+  },
+};
+
+function Nav({ tab, setTab, setViewDay, setDetailWorkout }) {
+  const items = ["home", "nutrition", "explore"];
   return (
     <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430,
       padding: "12px 20px 28px", display: "flex", justifyContent: "center",
@@ -559,16 +923,14 @@ function Nav({ tab, setTab, setViewDay }) {
       <div style={{ background: "#141414", border: "1px solid #302F2F", borderRadius: 100, padding: 8,
         display: "flex", gap: 12, alignItems: "center",
         boxShadow: "0 4px 8px rgba(221,251,36,0.08), 0 2px 4px rgba(221,251,36,0.04)" }}>
-        {items.map(it => {
-          const on = tab === it.id;
+        {items.map(id => {
+          const on = tab === id;
           return (
-            <button key={it.id}
-              onClick={() => { setTab(it.id); setViewDay(null); }}
+            <button key={id} onClick={() => { setTab(id); setViewDay(null); setDetailWorkout(null); }}
               style={{ width: 56, height: 56, borderRadius: 100, border: "none",
                 background: on ? "rgba(255,255,255,0.1)" : "transparent",
-                color: on ? "#DDFB24" : "#656565",
                 display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}>
-              {it.icon}
+              {on ? NAV_ICONS[id].active : NAV_ICONS[id].default}
             </button>
           );
         })}
@@ -577,7 +939,6 @@ function Nav({ tab, setTab, setViewDay }) {
   );
 }
 
-// ─── STYLES ───────────────────────────────────────────────────────────────
 const S = {
   wrap: { background: "#090903", minHeight: "100vh", maxWidth: 430, margin: "0 auto", fontFamily: "'DM Sans',sans-serif", color: "#fff", WebkitFontSmoothing: "antialiased" },
   h2: { fontSize: 28, fontWeight: 700, lineHeight: 1.3, margin: 0 },
@@ -589,8 +950,7 @@ const S = {
   xs: { fontSize: 12, lineHeight: 1.4, margin: 0 },
   card: { background: "linear-gradient(180deg,#141414,#0a0707)", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 24 },
   pill: { background: "rgba(245,245,245,0.05)", borderRadius: 40, padding: "4px 10px", fontSize: 12, color: "#fff" },
-  chip: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", color: "#8C8C8C",
-    cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 44 },
+  chip: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 44 },
   chipOn: { background: "rgba(221,251,36,0.08)", border: "1px solid rgba(221,251,36,0.25)", color: "#DDFB24" },
   btnPrimary: { background: "#DDFB24", color: "#000", border: "none", borderRadius: 14, padding: "16px 24px", fontSize: 16, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", width: "100%" },
   startBtn: { display: "inline-flex", alignItems: "center", gap: 4, background: "#DDFB24", color: "#000", borderRadius: 12, padding: "8px 8px 8px 14px", fontSize: 12, fontWeight: 600 },
@@ -601,5 +961,11 @@ const S = {
 if (typeof document !== "undefined" && !document.getElementById("dms")) {
   const l = document.createElement("link"); l.id = "dms"; l.rel = "stylesheet";
   l.href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap";
+  document.head.appendChild(l);
+  // Hide all scrollbars globally
+  const s = document.createElement("style"); s.id = "hide-scrollbars";
+  s.textContent = "::-webkit-scrollbar{display:none}*{-ms-overflow-style:none;scrollbar-width:none;}";
+  document.head.appendChild(s);
+}
   document.head.appendChild(l);
 }
