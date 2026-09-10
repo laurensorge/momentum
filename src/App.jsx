@@ -967,5 +967,3 @@ if (typeof document !== "undefined" && !document.getElementById("dms")) {
   s.textContent = "::-webkit-scrollbar{display:none}*{-ms-overflow-style:none;scrollbar-width:none;}";
   document.head.appendChild(s);
 }
-  document.head.appendChild(l);
-}
