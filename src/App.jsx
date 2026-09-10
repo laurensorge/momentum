@@ -344,6 +344,59 @@ const DAYS_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","
 const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 const FILTER_LABELS = ["All", "Glutes", "Cardio", "Core", "Full Body", "Flexibility"];
 
+// ─── EXERCISE IMAGES ─────────────────────────────────────────────────────
+// picsum.photos — free, no hotlink restrictions, seeded by category
+const IMG = {
+  glute:    "https://picsum.photos/seed/glute/400/200",
+  squat:    "https://picsum.photos/seed/squat/400/200",
+  lunge:    "https://picsum.photos/seed/lunge/400/200",
+  deadlift: "https://picsum.photos/seed/deadlift/400/200",
+  machine:  "https://picsum.photos/seed/machine/400/200",
+  pull:     "https://picsum.photos/seed/pulldown/400/200",
+  row:      "https://picsum.photos/seed/rowing/400/200",
+  shoulder: "https://picsum.photos/seed/shoulder/400/200",
+  core:     "https://picsum.photos/seed/plank/400/200",
+  cardio:   "https://picsum.photos/seed/treadmill/400/200",
+  stretch:  "https://picsum.photos/seed/yoga/400/200",
+  gym:      "https://picsum.photos/seed/gym/400/200",
+};
+
+const EX_CATEGORY = {
+  "Barbell Hip Thrust": "glute", "Hip Thrust (lighter)": "glute", "Hip Thrust (moderate)": "glute",
+  "Hip Thrust (bodyweight)": "glute", "Single-Leg Hip Thrust": "glute",
+  "Banded Glute Bridge": "glute", "Glute Bridge Burnout": "glute", "Frog Pump": "glute",
+  "Cable Kickback": "glute", "Cable Kickback (light)": "glute", "Cable Pull-Through": "glute",
+  "Hip Abductor Machine": "machine", "Back Extension (glute)": "machine", "Back Extension": "machine",
+  "Barbell Squat": "squat", "Goblet Squat": "squat", "Goblet Squat (deep)": "squat",
+  "Sumo Squat (DB)": "squat", "Banded Sumo Squat": "squat", "Bodyweight Squat": "squat",
+  "Bulgarian Split Squat (DB)": "lunge", "Walking Lunges (DB)": "lunge", "Walking Lunge": "lunge",
+  "Bodyweight Walking Lunge": "lunge", "Bodyweight Lunges": "lunge", "Reverse Lunge (DB)": "lunge",
+  "Step-Up (DB)": "lunge",
+  "Romanian Deadlift (BB)": "deadlift", "Romanian Deadlift (DB)": "deadlift",
+  "DB Romanian Deadlift": "deadlift", "Sumo Deadlift": "deadlift",
+  "Single-Leg RDL (DB)": "deadlift", "Single-Leg RDL": "deadlift",
+  "Leg Press (high & wide)": "machine", "Lying Hamstring Curl": "machine", "Leg Extension": "machine",
+  "Lat Pulldown (wide)": "pull", "Lat Pulldown (neutral grip)": "pull",
+  "Lat Pulldown (neutral)": "pull", "Lat Pulldown": "pull",
+  "Straight-Arm Pulldown": "pull", "DB Pullover": "pull",
+  "Seated Cable Row": "row", "Single-Arm DB Row": "row", "Single-Arm Cable Row": "row",
+  "Face Pulls": "shoulder", "Cable Face Pull": "shoulder", "Reverse Pec Deck": "shoulder",
+  "Reverse DB Fly": "shoulder", "DB Lateral Raise (light)": "shoulder",
+  "Plank Hold": "core", "Side Plank": "core", "Dead Bug": "core",
+  "Pallof Press": "core", "Hollow Hold": "core", "Cable Woodchop": "core",
+  "Incline Walk": "cardio", "Stair Climber": "cardio", "Jump Rope (or march)": "cardio",
+  "Hip Flexor Stretch": "stretch", "Pigeon Pose": "stretch",
+  "Hamstring Stretch (standing)": "stretch", "Cat-Cow": "stretch",
+  "90/90 Hip Stretch": "stretch", "Child's Pose": "stretch",
+};
+
+// Real custom images — override the category placeholder when a real photo exists
+const EX_IMG_OVERRIDE = {
+  "Barbell Hip Thrust": "/images/barbell-hip-thrust.png",
+};
+
+const getImg = (name) => EX_IMG_OVERRIDE[name] || IMG[EX_CATEGORY[name] || "gym"];
+
 const I = {
   home: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10.5z"/><path d="M9 22V14h6v8"/></svg>,
   nutrition: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>,
@@ -525,10 +578,16 @@ export default function App() {
           )}
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
             {alt.exercises.map((ex, idx) => (
-              <div key={idx} style={{ ...S.card, padding: "14px 16px" }}>
-                <p style={{ ...S.sm, fontWeight: 700 }}>{ex.name}</p>
-                <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
-                <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
+              <div key={idx} style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 80, display: "flex", alignItems: "stretch" }}>
+                <div style={{ flex: 1, padding: "14px 16px", zIndex: 1 }}>
+                  <p style={{ ...S.sm, fontWeight: 700 }}>{ex.name}</p>
+                  <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
+                  <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
+                </div>
+                <div style={{ width: 90, flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                  <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "right center", opacity: 0.85 }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, transparent 60%)" }} />
+                </div>
               </div>
             ))}
           </div>
@@ -741,19 +800,27 @@ export default function App() {
               const done = isToday && donesToday.includes(idx);
               return (
                 <div key={idx} onClick={() => isToday && toggle(idx)}
-                  style={{ ...S.card, padding: "14px 16px", display: "flex", gap: 12, cursor: isToday ? "pointer" : "default", opacity: done ? 0.4 : 1, transition: "opacity 0.3s" }}>
+                  style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 80,
+                    display: "flex", alignItems: "stretch",
+                    cursor: isToday ? "pointer" : "default", opacity: done ? 0.35 : 1, transition: "opacity 0.3s" }}>
                   {isToday && (
-                    <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
-                      border: done ? "none" : "1.5px solid rgba(255,255,255,0.15)",
-                      background: done ? "#DDFB24" : "transparent",
-                      display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {done && <span style={{ color: "#000" }}>{I.check}</span>}
+                    <div style={{ display: "flex", alignItems: "center", paddingLeft: 14, zIndex: 1, flexShrink: 0 }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 8,
+                        border: done ? "none" : "1.5px solid rgba(255,255,255,0.15)",
+                        background: done ? "#DDFB24" : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {done && <span style={{ color: "#000" }}>{I.check}</span>}
+                      </div>
                     </div>
                   )}
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, padding: "14px 12px 14px 14px", zIndex: 1 }}>
                     <p style={{ ...S.sm, fontWeight: 700, textDecoration: done ? "line-through" : "none" }}>{ex.name}</p>
                     <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
                     <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
+                  </div>
+                  <div style={{ width: 90, flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                    <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "right center", opacity: 0.85 }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, transparent 60%)" }} />
                   </div>
                 </div>
               );
