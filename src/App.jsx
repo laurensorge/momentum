@@ -458,6 +458,7 @@ export default function App() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [detailWorkout, setDetailWorkout] = useState(null); // alt workout being viewed
+  const [expandedImg, setExpandedImg] = useState(null); // exercise name whose image is expanded
 
   const now = new Date();
   const dow = now.getDay();
@@ -549,6 +550,23 @@ export default function App() {
     </div>
   );
 
+  // ── IMAGE EXPAND MODAL (overlays any screen) ──
+  const ImageModal = expandedImg ? (
+    <div onClick={() => setExpandedImg(null)} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 999,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+    }}>
+      <div style={{ maxWidth: 430, width: "100%" }}>
+        <img src={getImg(expandedImg)} alt={expandedImg}
+          style={{ width: "100%", borderRadius: 20, display: "block" }} />
+        <p style={{ ...S.md, fontWeight: 700, color: "#fff", marginTop: 16, textAlign: "center" }}>{expandedImg}</p>
+        <button onClick={() => setExpandedImg(null)} style={{
+          ...S.btnPrimary, marginTop: 16,
+        }}>Close</button>
+      </div>
+    </div>
+  ) : null;
+
   // ── ALT WORKOUT DETAIL ──
   if (detailWorkout) {
     const alt = ALT_WORKOUTS.find(a => a.id === detailWorkout);
@@ -578,15 +596,16 @@ export default function App() {
           )}
           <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
             {alt.exercises.map((ex, idx) => (
-              <div key={idx} style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 80, display: "flex", alignItems: "stretch" }}>
-                <div style={{ flex: 1, padding: "14px 16px", zIndex: 1 }}>
+              <div key={idx} onClick={() => setExpandedImg(ex.name)}
+                style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 90, display: "flex", alignItems: "stretch", cursor: "pointer" }}>
+                <div style={{ flex: 1, padding: "14px 16px", zIndex: 1, position: "relative" }}>
                   <p style={{ ...S.sm, fontWeight: 700 }}>{ex.name}</p>
                   <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
                   <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
                 </div>
-                <div style={{ width: 90, flexShrink: 0, position: "relative", overflow: "hidden" }}>
-                  <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "right center", opacity: 0.85 }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, transparent 60%)" }} />
+                <div style={{ width: 150, flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                  <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, rgba(20,20,20,0.85) 15%, rgba(20,20,20,0.4) 45%, transparent 85%)" }} />
                 </div>
               </div>
             ))}
@@ -594,6 +613,7 @@ export default function App() {
         </div>
         <div style={{ height: 100 }} />
         <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      {ImageModal}
       </div>
     );
   }
@@ -646,6 +666,7 @@ export default function App() {
         </div>
         <div style={{ height: 120 }} />
         <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      {ImageModal}
       </div>
     );
   }
@@ -757,6 +778,7 @@ export default function App() {
 
         <div style={{ height: 120 }} />
         <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      {ImageModal}
       </div>
     );
   }
@@ -799,12 +821,12 @@ export default function App() {
             {exs.map((ex, idx) => {
               const done = isToday && donesToday.includes(idx);
               return (
-                <div key={idx} onClick={() => isToday && toggle(idx)}
-                  style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 80,
+                <div key={idx}
+                  style={{ ...S.card, overflow: "hidden", position: "relative", minHeight: 90,
                     display: "flex", alignItems: "stretch",
-                    cursor: isToday ? "pointer" : "default", opacity: done ? 0.35 : 1, transition: "opacity 0.3s" }}>
+                    opacity: done ? 0.35 : 1, transition: "opacity 0.3s" }}>
                   {isToday && (
-                    <div style={{ display: "flex", alignItems: "center", paddingLeft: 14, zIndex: 1, flexShrink: 0 }}>
+                    <div onClick={() => toggle(idx)} style={{ display: "flex", alignItems: "center", paddingLeft: 14, zIndex: 1, flexShrink: 0, cursor: "pointer" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8,
                         border: done ? "none" : "1.5px solid rgba(255,255,255,0.15)",
                         background: done ? "#DDFB24" : "transparent",
@@ -813,14 +835,14 @@ export default function App() {
                       </div>
                     </div>
                   )}
-                  <div style={{ flex: 1, padding: "14px 12px 14px 14px", zIndex: 1 }}>
+                  <div onClick={() => isToday && toggle(idx)} style={{ flex: 1, padding: "14px 12px 14px 14px", zIndex: 1, cursor: isToday ? "pointer" : "default" }}>
                     <p style={{ ...S.sm, fontWeight: 700, textDecoration: done ? "line-through" : "none" }}>{ex.name}</p>
                     <span style={{ ...S.xs, color: "#DDFB24", marginTop: 3, display: "inline-block" }}>{ex.sets}</span>
                     <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{ex.notes}</p>
                   </div>
-                  <div style={{ width: 90, flexShrink: 0, position: "relative", overflow: "hidden" }}>
-                    <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "right center", opacity: 0.85 }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, transparent 60%)" }} />
+                  <div onClick={() => setExpandedImg(ex.name)} style={{ width: 150, flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }}>
+                    <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, rgba(20,20,20,0.85) 15%, rgba(20,20,20,0.4) 45%, transparent 85%)" }} />
                   </div>
                 </div>
               );
@@ -835,6 +857,7 @@ export default function App() {
         </div>
         <div style={{ height: 120 }} />
         <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      {ImageModal}
       </div>
     );
   }
@@ -961,6 +984,7 @@ export default function App() {
 
       <div style={{ height: 120 }} />
       <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+      {ImageModal}
     </div>
   );
 }
