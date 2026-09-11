@@ -7,6 +7,8 @@ const DAY_WORKOUT_IMAGES = {
   day4: "/images/main-posture.png",
   day5: "/images/main-burnout.png",
 };
+const SAVE_ICON_DEFAULT = "/images/save-default.svg";
+const SAVE_ICON_TAPPED = "/images/save-tapped.svg";
 
 const WEEK_LABELS = ["Base", "Build", "Peak", "Deload"];
 
@@ -369,7 +371,7 @@ const MEALS = {
 const DAYS = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 const DAYS_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-const FILTER_LABELS = ["All", "Glutes", "Cardio", "Core", "Full Body", "Flexibility"];
+const FILTER_LABELS = ["All", "Saved", "Glutes", "Cardio", "Core", "Full Body", "Flexibility"];
 
 // ─── EXERCISE IMAGES ─────────────────────────────────────────────────────
 // picsum.photos — free, no hotlink restrictions, seeded by category
@@ -550,6 +552,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [detailWorkout, setDetailWorkout] = useState(null); // alt workout being viewed
   const [expandedImg, setExpandedImg] = useState(null); // exercise name whose image is expanded
+  const [savedWorkouts, setSavedWorkouts] = useState([]);
 
   const now = new Date();
   const dow = now.getDay();
@@ -585,6 +588,7 @@ export default function App() {
       const done = localStorage.getItem("m:done"); if (done) setCompleted(JSON.parse(done));
       const start = localStorage.getItem("m:start"); if (start) setStartDate(start);
       const swap = localStorage.getItem("m:swap"); if (swap) setSwappedWorkout(JSON.parse(swap));
+      const saved = localStorage.getItem("m:saved"); if (saved) setSavedWorkouts(JSON.parse(saved));
     } catch {}
     setLoading(false);
   }, []);
@@ -622,8 +626,15 @@ export default function App() {
     try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
   };
 
+  const toggleSaved = (id) => {
+    const next = savedWorkouts.includes(id) ? savedWorkouts.filter(x => x !== id) : [...savedWorkouts, id];
+    setSavedWorkouts(next);
+    try { localStorage.setItem("m:saved", JSON.stringify(next)); } catch {}
+  };
+
   const filteredAlts = ALT_WORKOUTS.filter(a => {
-    const matchFilter = activeFilter === "All" || a.label === activeFilter;
+    if (activeFilter === "Saved" && !savedWorkouts.includes(a.id)) return false;
+    const matchFilter = activeFilter === "All" || activeFilter === "Saved" || a.label === activeFilter;
     const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.desc.toLowerCase().includes(searchQuery.toLowerCase());
     return matchFilter && matchSearch;
@@ -705,7 +716,8 @@ export default function App() {
                 </div>
                 <div style={{ width: 150, flexShrink: 0, position: "relative", overflow: "hidden" }}>
                   <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, rgba(20,20,20,0.85) 15%, rgba(20,20,20,0.4) 45%, transparent 85%)" }} />
+                  <div style={{ position: "absolute", top: -1, bottom: -1, left: -130, width: 280, background: "linear-gradient(90deg, #0a0707 6%, rgba(10,7,7,0.98) 28%, rgba(10,7,7,0.72) 54%, rgba(10,7,7,0.08) 86%, transparent 100%)", pointerEvents: "none" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.16), transparent 35%, rgba(9,9,3,0.42))", pointerEvents: "none" }} />
                 </div>
               </div>
             ))}
@@ -728,12 +740,12 @@ export default function App() {
           <h1 style={S.h2}>Meal Plan</h1>
           <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 4 }}>Keto · ~1,500 cal · 120g protein · &lt;25g carbs</p>
         </div>
-        <div style={{ padding: "4px 16px 12px", display: "flex", gap: 6, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ padding: "4px 16px 12px", display: "flex", gap: 8, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           {[0,1,2,3,4,5,6].map(d => (
             <button key={d} onClick={() => { setViewDay(d); setExpandedMeal(null); }}
-              style={{ ...S.chip, ...(mealDay === d ? S.chipOn : {}), flexShrink: 0 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, lineHeight: 1 }}>{DAYS[d]}</span>
-              {d === dow && <span style={{ width: 4, height: 4, borderRadius: 2, background: mealDay === d ? "#DDFB24" : "#656565" }} />}
+              style={{ ...S.chip, ...(mealDay === d ? S.chipOn : {}), width: 48, height: 48, minWidth: 48, flexShrink: 0, padding: "8px 4px", borderRadius: 14, justifyContent: "center" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>{DAYS[d]}</span>
+              {d === dow && <span style={{ width: 4, height: 4, borderRadius: 2, marginTop: 4, background: mealDay === d ? "#000" : "#DDFB24" }} />}
             </button>
           ))}
         </div>
@@ -782,13 +794,14 @@ export default function App() {
 
         {/* Today's plan reminder */}
         <div style={{ padding: "0 16px 8px" }}>
-          <div style={{ ...S.card, padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(221,251,36,0.15)" }}>
-            <div>
-              <p style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, marginBottom: 2 }}>TODAY'S PLAN</p>
-              <p style={{ ...S.sm, fontWeight: 700 }}>{todayTitle}</p>
+          <div style={{ ...S.card, minHeight: 220, position: "relative", overflow: "hidden", border: "1px solid rgba(221,251,36,0.25)" }}>
+            <img src={todayWorkoutImage} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.06) 15%, rgba(9,9,3,0.88) 100%)" }} />
+            <div style={{ position: "relative", zIndex: 1, minHeight: 220, padding: 16, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+              <p style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, marginBottom: 2 }}>TODAY'S WORKOUT</p>
+              <p style={{ ...S.h4, fontWeight: 700 }}>{todayTitle}</p>
               {todaySwap && <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 2 }}>Swapped from scheduled</p>}
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
               {todaySwap && (
                 <button onClick={clearSwap} style={{ ...S.xs, color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
                   Reset
@@ -798,12 +811,16 @@ export default function App() {
                 View
                 <span style={{ background: "#000", borderRadius: 100, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>{I.right}</span>
               </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div style={{ padding: "8px 16px" }}>
+        {/* Browse controls */}
+        <div style={{ padding: "16px 16px 4px" }}>
+          <h3 style={{ ...S.h5, margin: 0 }}>Browse Workouts</h3>
+        </div>
+        <div style={{ padding: "8px 16px 4px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "10px 16px" }}>
             <span style={{ color: "#656565" }}>{I.search}</span>
             <input
@@ -816,11 +833,11 @@ export default function App() {
         </div>
 
         {/* Filters */}
-        <div style={{ padding: "4px 16px 12px", display: "flex", gap: 8, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ padding: "4px 16px 8px", display: "flex", gap: 8, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           {FILTER_LABELS.map(f => (
             <button key={f} onClick={() => setActiveFilter(f)} style={{
-              flexShrink: 0, padding: "8px 14px", borderRadius: 40, cursor: "pointer",
-              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600,
+              flexShrink: 0, padding: "7px 13px", borderRadius: 40, cursor: "pointer",
+              fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600,
               background: activeFilter === f ? "#DDFB24" : "rgba(255,255,255,0.05)",
               color: activeFilter === f ? "#000" : "#fff",
               border: activeFilter === f ? "none" : "1px solid #525252",
@@ -830,9 +847,9 @@ export default function App() {
 
         {/* Workout cards */}
         <div style={{ padding: "4px 16px" }}>
-          <h3 style={{ ...S.h5, marginBottom: 12 }}>
-            {activeFilter === "All" ? "All Workouts" : activeFilter} {searchQuery && `· "${searchQuery}"`}
-          </h3>
+          <p style={{ ...S.xs, color: "#8C8C8C", margin: "8px 0 12px" }}>
+            {filteredAlts.length} {activeFilter === "All" ? "workouts" : `${activeFilter.toLowerCase()} workouts`}{searchQuery && ` matching “${searchQuery}”`}
+          </p>
           {filteredAlts.length === 0 ? (
             <p style={{ ...S.sm, color: "#656565", padding: "20px 0" }}>No workouts match that filter.</p>
           ) : (
@@ -841,11 +858,16 @@ export default function App() {
                 const isActive = todaySwap === alt.id;
                 return (
                   <div key={alt.id} style={{
-                    ...S.card, padding: 16,
+                    ...S.card, padding: 16, minHeight: 190, position: "relative", overflow: "hidden",
                     border: isActive ? "1px solid rgba(221,251,36,0.3)" : "0.5px solid rgba(255,255,255,0.12)",
                   }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1 }}>
+                    <img src={getImg(alt.exercises[0].name)} alt="" aria-hidden="true" style={{ position: "absolute", inset: "0 0 0 45%", width: "55%", height: "100%", objectFit: "cover", opacity: 0.9 }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #141414 28%, rgba(20,20,20,0.98) 43%, rgba(20,20,20,0.72) 62%, rgba(10,7,7,0.12) 100%), linear-gradient(180deg, transparent 48%, rgba(9,9,3,0.74) 100%)", pointerEvents: "none" }} />
+                    <button onClick={() => toggleSaved(alt.id)} aria-label={savedWorkouts.includes(alt.id) ? `Remove ${alt.title} from saved workouts` : `Save ${alt.title}`} style={{ position: "absolute", right: 12, top: 12, zIndex: 2, width: 40, height: 40, borderRadius: 12, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 8 }}>
+                      <img src={savedWorkouts.includes(alt.id) ? SAVE_ICON_TAPPED : SAVE_ICON_DEFAULT} alt="" width="24" height="24" />
+                    </button>
+                    <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 158 }}>
+                      <div>
                         <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                           <span style={S.pill}>{alt.label}</span>
                           {isActive && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Today's pick</span>}
@@ -854,8 +876,7 @@ export default function App() {
                         <p style={{ ...S.xs, color: "#656565", marginTop: 3 }}>{alt.desc}</p>
                         <p style={{ ...S.xs, color: "#525252", marginTop: 4 }}>{alt.exercises.length} exercises</p>
                       </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                      <div style={{ display: "flex", gap: 8, marginTop: 12, width: "100%" }}>
                       <button onClick={() => setDetailWorkout(alt.id)} style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 600, color: "#fff" }}>
                         Preview
                       </button>
@@ -868,6 +889,7 @@ export default function App() {
                           Undo Swap
                         </button>
                       )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -942,7 +964,8 @@ export default function App() {
                   </div>
                   <div onClick={() => setExpandedImg(ex.name)} style={{ width: 150, flexShrink: 0, position: "relative", overflow: "hidden", cursor: "pointer" }}>
                     <img src={getImg(ex.name)} alt={ex.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #141414 0%, rgba(20,20,20,0.85) 15%, rgba(20,20,20,0.4) 45%, transparent 85%)" }} />
+                    <div style={{ position: "absolute", top: -1, bottom: -1, left: -130, width: 280, background: "linear-gradient(90deg, #0a0707 6%, rgba(10,7,7,0.98) 28%, rgba(10,7,7,0.72) 54%, rgba(10,7,7,0.08) 86%, transparent 100%)", pointerEvents: "none" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.16), transparent 35%, rgba(9,9,3,0.42))", pointerEvents: "none" }} />
                   </div>
                 </div>
               );
