@@ -17,15 +17,16 @@ export function FocusSummary({ plan }) {
   return <div className="pm-focus-summary"><p>{plan.focus?.join(', ') || 'Balanced full-body training'}</p></div>;
 }
 
-export default function BodyFocus({ plan, onChange }) {
+export default function BodyFocus({ plan, onChange, hideHeading = false }) {
   const [view, setView] = useState('Front');
   const selected = plan.focus || [];
   const choose = area => {
     onChange({ ...plan, focus: selected.includes(area) ? selected.filter(item => item !== area) : AREAS.filter(item => item === area || selected.includes(item)) });
   };
   const visible = view === 'Front' ? ['Shoulders', 'Chest', 'Arms', 'Abs', 'Quads', 'Calves'] : ['Shoulders', 'Arms', 'Back', 'Glutes', 'Hamstrings', 'Calves'];
-  return <fieldset className="pm-body-focus"><legend>Where do you want to focus?</legend>
-    <p className="pm-muted">Select the areas you’d like to prioritize. Leave everything unselected for a balanced plan.</p>
+  return <fieldset className="pm-body-focus" style={hideHeading ? { margin: 0 } : undefined} aria-label={hideHeading ? 'Body focus areas' : undefined}>
+    {!hideHeading && <legend>Where do you want to focus?</legend>}
+    {!hideHeading && <p className="pm-muted">Select the areas you’d like to prioritize. Leave everything unselected for a balanced plan.</p>}
     <div className="pm-body-panel">
       <div className="pm-chips" role="group" aria-label="Body view">{['Front', 'Back'].map(side => <button type="button" className="pm-toggle" aria-pressed={view === side} key={side} onClick={() => setView(side)}>{side}</button>)}</div>
       <svg className="pm-body-map" viewBox="0 0 180 370" role="group" aria-label={`${view} body areas. Select your focus areas.`}>
@@ -38,6 +39,6 @@ export default function BodyFocus({ plan, onChange }) {
     </div>
     <p className="pm-muted">Tap the body or select an area below.</p>
     <div className="pm-chips">{AREAS.map(area => <button type="button" key={area} className="pm-toggle" aria-pressed={selected.includes(area)} onClick={() => choose(area)}>{selected.includes(area) ? '✓ ' : '+ '}{area}</button>)}</div>
-    <div aria-live="polite"><FocusSummary plan={plan} /></div>
+    {!hideHeading && <div aria-live="polite"><FocusSummary plan={plan} /></div>}
   </fieldset>;
 }

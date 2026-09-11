@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import OnboardingFlow from "./onboarding/OnboardingFlow";
 import PlanMockup from "./PlanMockup";
+import ProgramLoading from "./ProgramLoading";
 
 const DAY_WORKOUT_IMAGES = {
   day1: "/images/main-glutes.png",
@@ -910,11 +911,11 @@ export default function App() {
     return matchFilter && matchSearch;
   });
 
-  if (authLoading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading...</p></div>;
+  if (authLoading) return <ProgramLoading />;
 
   if (!session) return <AuthScreen />;
 
-  if (loading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading your program...</p></div>;
+  if (loading) return <ProgramLoading />;
 
   if (!profile?.onboarding_completed_at) {
     return <OnboardingFlow user={session.user} profile={profile} onComplete={setProfile} />;

@@ -91,6 +91,7 @@ export function buildPersonalizedPlan(answers) {
     level: answers.level,
     available_equipment: answers.equipment,
     preferred_activities: answers.activities,
+    focus_areas: answers.focus || [],
     weekly_schedule: weeklySchedule,
   };
 }

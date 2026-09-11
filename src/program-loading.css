@@ -1,0 +1,21 @@
+.program-loading {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: #090903;
+  padding: 32px;
+}
+.program-loading-logo {
+  display: block;
+  width: min(244px, 100%);
+  height: auto;
+  animation: momentum-breathe 1.8s ease-in-out infinite;
+}
+@keyframes momentum-breathe {
+  0%, 100% { opacity: .5; transform: scale(.97); }
+  50% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .program-loading-logo { animation: none; opacity: 1; }
+}

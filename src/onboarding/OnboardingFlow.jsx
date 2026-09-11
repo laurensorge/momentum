@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
+import BodyFocus from "../BodyFocus";
+import "../plan-mockup.css";
 import { ACTIVITIES, EQUIPMENT, FREQUENCIES, GOALS, LEVELS, buildPersonalizedPlan } from "./personalization";
 
 const STEPS = [
   { key: "goal", title: "What are your fitness goals? 🎯", subtitle: "Select one option.", type: "single", options: GOALS },
   { key: "level", title: "What’s your current fitness level? 💪", subtitle: "Select one option.", type: "single", options: LEVELS },
+  { key: "focus", title: "Where do you want to focus?", subtitle: "Select the areas you’d like to prioritize. Leave everything unselected for a balanced plan.", type: "body" },
   { key: "activities", title: "What types of activities do you enjoy? 🏋️", subtitle: "Select all that apply.", type: "multi", options: ACTIVITIES },
   { key: "equipment", title: "What equipment do you have access to? 🚴", subtitle: "Select all that apply.", type: "multi", options: EQUIPMENT },
   { key: "frequency", title: "How often do you want to workout? 🏃", subtitle: "Select one option.", type: "single", options: FREQUENCIES },
@@ -13,6 +16,7 @@ const STEPS = [
 const DEFAULTS = {
   goal: "general_fitness",
   level: "beginner",
+  focus: [],
   activities: [],
   equipment: [],
   frequency: "3_4_days",
@@ -31,11 +35,10 @@ const SUMMARY_IMAGES = {
 };
 
 function Progress({ step }) {
-  const activeSegment = step === 0 ? 0 : step <= 2 ? 1 : step === 3 ? 2 : 3;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 5 }}>
-      {[0, 1, 2, 3].map((index) => (
-        <div key={index} style={{ height: 5, background: index === activeSegment ? "linear-gradient(90deg,#DDFB24,#ff7a1a)" : "#302F2F" }} />
+    <div role="progressbar" aria-label="Onboarding progress" aria-valuemin={1} aria-valuemax={STEPS.length} aria-valuenow={step + 1} style={{ display: "grid", gridTemplateColumns: `repeat(${STEPS.length}, 1fr)`, gap: 5 }}>
+      {STEPS.map((item, index) => (
+        <div key={item.key} style={{ height: 5, background: index === step ? "linear-gradient(90deg,#DDFB24,#ff7a1a)" : "#302F2F" }} />
       ))}
     </div>
   );
@@ -66,8 +69,8 @@ function ChoiceCard({ option, selected, onClick }) {
   );
 }
 
-export default function OnboardingFlow({ user, profile, onComplete }) {
-  const [step, setStep] = useState(0);
+export default function OnboardingFlow({ user, profile, onComplete, preview = false, previewStartAtFocus = false }) {
+  const [step, setStep] = useState(preview && previewStartAtFocus ? STEPS.findIndex(item => item.key === 'focus') : 0);
   const [answers, setAnswers] = useState(DEFAULTS);
   const [success, setSuccess] = useState(false);
   const [savedProfile, setSavedProfile] = useState(null);
@@ -99,6 +102,10 @@ export default function OnboardingFlow({ user, profile, onComplete }) {
       return;
     }
 
+    if (preview) {
+      setSuccess(true);
+      return;
+    }
     setSaving(true);
     setError("");
     const completedAt = new Date().toISOString();
@@ -168,8 +175,8 @@ export default function OnboardingFlow({ user, profile, onComplete }) {
           <h1 style={styles.title}>{current.title}</h1>
           <p style={styles.subtitle}>{current.subtitle}</p>
         </div>
-        <div style={{ display: "flex", flexDirection: current.type === "multi" ? "row" : "column", flexWrap: "wrap", gap: current.type === "multi" ? 10 : 16, marginTop: 28 }}>
-          {current.options.map((option) => current.type === "multi" ? (
+        <div style={{ display: "flex", flexDirection: current.type === "multi" ? "row" : "column", flexWrap: "wrap", gap: current.type === "multi" ? 10 : 16, marginTop: current.type === "body" ? 16 : 28 }}>
+          {current.type === "body" ? <div className="pm" style={{ width: "100%", minHeight: 0, background: "transparent", paddingBottom: 0 }}><BodyFocus hideHeading plan={answers} onChange={setAnswers} /></div> : current.options.map((option) => current.type === "multi" ? (
             <button key={option} type="button" onClick={() => choose(option)} style={{
               padding: "10px 14px", borderRadius: 999, fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer",
               background: selected(option) ? "#DDFB24" : "#141414", color: selected(option) ? "#000" : "#fff",
@@ -192,7 +199,7 @@ export default function OnboardingFlow({ user, profile, onComplete }) {
 const styles = {
   wrap: { background: "radial-gradient(circle at 50% 18%,#111204 0%,#050600 38%,#020300 100%)", minHeight: "100vh", maxWidth: 430, margin: "0 auto", color: "#fff", fontFamily: "'DM Sans',sans-serif" },
   title: { fontSize: 34, lineHeight: 1.12, margin: 0, letterSpacing: -0.7 },
-  subtitle: { color: "#c3c3c3", fontSize: 20, lineHeight: 1.35, margin: "20px 0 0" },
+  subtitle: { color: "#c3c3c3", fontSize: 18, lineHeight: 1.35, margin: "20px 0 0" },
   small: { color: "#ADADAD", fontSize: 14, margin: 0 },
   primary: { width: "100%", minHeight: 48, borderRadius: 13, background: "linear-gradient(180deg,#DDFB24,#d8ff10)", color: "#000", border: "1px solid #efff75", boxShadow: "0 0 0 3px #59660b", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
   skip: { width: "100%", padding: "18px 0 4px", background: "none", border: "none", color: "#DDFB24", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" },
