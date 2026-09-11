@@ -921,7 +921,7 @@ export default function App() {
     return <OnboardingFlow user={session.user} profile={profile} onComplete={setProfile} />;
   }
 
-  if (showPlanMockup) return <PlanMockup initialScreen="settings" onClose={() => setShowPlanMockup(false)} />;
+  if (showPlanMockup) return <PlanMockup initialScreen="settings" onClose={() => setShowPlanMockup(false)} onSignOut={async () => { const { error } = await supabase.auth.signOut(); if (error) throw error; setShowPlanMockup(false); }} />;
 
   // ── IMAGE EXPAND MODAL (overlays any screen) ──
   const ImageModal = expandedImg ? (
@@ -1320,7 +1320,6 @@ export default function App() {
           </svg>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ ...S.xs, color: "#ADADAD", fontWeight: 600, letterSpacing: 1 }}>{DAYS[dow]}  {now.getDate()} {MONTHS[now.getMonth()]}</span>
-            <button onClick={() => supabase.auth.signOut()} style={{ ...S.btnText, fontSize: 11, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}>Sign out</button>
             <button onClick={() => setShowPlanMockup(true)} aria-label="Settings" style={{ width: 40, height: 40, display: "grid", placeItems: "center", background: "#141414", border: "1px solid #302F2F", borderRadius: "50%", color: "#fff", cursor: "pointer" }}>
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 3-.5 2-2 .9-1.9-.6-2 3.4L4 10.2v2.3L2.6 14l2 3.4 1.9-.6 2 .9.5 2h4l.5-2 2-.9 1.9.6 2-3.4-1.4-1.5v-2.3l1.4-1.5-2-3.4-1.9.6-2-.9-.5-2Z" transform="translate(1 1)"/><circle cx="12" cy="12" r="3"/></svg>
             </button>

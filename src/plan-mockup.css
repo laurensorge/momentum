@@ -63,5 +63,10 @@
 .pm-map-legend span:first-child { color: #ddfb24; }
 .pm-maintain-toggle[aria-pressed="true"] { background: #d2d2d2; border-color: white; }
 .pm-focus-summary { display: block; }
+.pm-account-actions { margin-top: 32px; padding-top: 20px; border-top: 1px solid #302f2f; }
+.pm-signout { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; border: 1px solid #525252; border-radius: 13px; background: transparent; color: #d2d2d2; font-size: 14px; }
+.pm-signout:hover { background: #141414; border-color: #8c8c8c; }
+.pm-signout svg { order: 1; }
+.pm-signout:disabled { opacity: .5; cursor: wait; }
 .pm-focus-summary strong { color: white; font-size: 12px; }
 @media (max-width: 360px) { .pm-content { padding: 0 16px; }.pm h1 { font-size: 28px; }.pm-choice { padding: 14px 10px; } }

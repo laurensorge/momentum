@@ -30,7 +30,15 @@ const schedule = plan => {
 };
 const dateLabel = (date) => date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 
-export default function PlanMockup({ onClose, initialScreen = 'manage' }) {
+export default function PlanMockup({ onClose, onSignOut, initialScreen = 'manage' }) {
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutMessage, setSignOutMessage] = useState('');
+  const signOut = async () => {
+    if (!onSignOut) { setSignOutMessage('Preview only — your account is still signed in.'); return; }
+    setSigningOut(true);
+    setSignOutMessage('');
+    try { await onSignOut(); } catch { setSignOutMessage('Couldn’t sign out. Please try again.'); } finally { setSigningOut(false); }
+  };
   const goHome = () => onClose ? onClose() : window.location.assign('/');
   const [screen, setScreen] = useState(initialScreen);
   const [active, setActive] = useState(INITIAL);
@@ -117,7 +125,7 @@ export default function PlanMockup({ onClose, initialScreen = 'manage' }) {
 
       {screen === 'success' && <div className="pm-success"><div className="pm-check">✓</div><h2>{timing === 'next' ? 'Your next chapter is scheduled.' : 'Ready when you are.'}</h2><p>{result}</p><section className="pm-card"><strong>{proposed.name}</strong><p>{draft.days} · {draft.time} min</p><p>{changedProgram ? 'A fresh four-week program.' : `Continuing week ${active.week}.`} Your history stays with you.</p></section><button className="pm-primary" onClick={goHome}>Back to Home <span>→</span></button></div>}
 
-      {screen === 'settings' && <><p className="pm-intro">Make Momentum work for you.</p><button className="pm-settings-row" onClick={() => setScreen('manage')}><span><strong>Manage my plan</strong><small>{current.name} · Week {active.week}</small></span><span>→</span></button></>}
+      {screen === 'settings' && <><p className="pm-intro">Make Momentum work for you.</p><button className="pm-settings-row" onClick={() => setScreen('manage')}><span><strong>Manage my plan</strong><small>{current.name} · Week {active.week}</small></span><span>→</span></button><div className="pm-account-actions"><button className="pm-signout" onClick={signOut} disabled={signingOut}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h10m-4-4 4 4-4 4" /></svg>{signingOut ? 'Signing out…' : 'Sign out'}</button>{signOutMessage && <p role="status">{signOutMessage}</p>}</div></>}
       {['preferences', 'preview'].includes(screen) && <p className="pm-preview-note">Preview only. Changes reset when you leave and do not update your account.</p>}
     </div>
   </main>;
