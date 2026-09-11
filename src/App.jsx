@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { supabase } from "./lib/supabase";
+import OnboardingFlow from "./onboarding/OnboardingFlow";
 
 const DAY_WORKOUT_IMAGES = {
   day1: "/images/main-glutes.png",
@@ -560,8 +562,129 @@ function WorkoutCard({ title, tag, desc, onStart, isSwap, isScheduled }) {
   );
 }
 
+function AuthScreen() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [mode, setMode] = useState("sign-in");
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage("");
+    setError("");
+
+    const result = mode === "sign-up"
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: displayName.trim() } },
+        })
+      : await supabase.auth.signInWithPassword({ email, password });
+
+    if (result.error) {
+      setError(result.error.message);
+    } else if (mode === "sign-up" && !result.data.session) {
+      setMessage("Check your email to confirm your account, then come back and sign in.");
+    }
+    setSubmitting(false);
+  };
+
+  const switchMode = () => {
+    setMode(mode === "sign-in" ? "sign-up" : "sign-in");
+    setMessage("");
+    setError("");
+  };
+
+  if (showSplash) {
+    return (
+      <div style={{ ...S.wrap, position: "relative", minHeight: "100vh", overflow: "hidden" }}>
+        <img src="/images/main-back.png" alt="Athlete training" style={{ position: "absolute", inset: 0, width: "100%", height: "64%", objectFit: "cover", objectPosition: "center" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(2,3,0,0.08) 28%,#050600 62%,#050600 100%)" }} />
+        <div style={{ position: "relative", zIndex: 1, minHeight: "100vh", padding: "0 24px 72px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src="/icon.svg" alt="" style={{ width: 44, height: 44 }} />
+            <strong style={{ fontSize: 30, letterSpacing: 1 }}>MOMENTUM</strong>
+          </div>
+          <h1 style={{ fontSize: 38, lineHeight: 1.18, letterSpacing: -1, margin: "26px 0 30px" }}>Start building a healthier, stronger you.</h1>
+          <button type="button" onClick={() => setShowSplash(false)} style={S.btnPrimary}>Start Your Journey</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={S.wrap}>
+      <div style={{ minHeight: "100vh", padding: "110px 24px 52px", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+        <img src="/icon.svg" alt="Momentum" style={{ width: 48, height: 48, marginBottom: 30 }} />
+        <h1 style={{ fontSize: 36, lineHeight: 1.2, letterSpacing: -0.8, margin: 0 }}>{mode === "sign-in" ? "Welcome back! Sign in to get started." : "Create your Momentum account."}</h1>
+        <p style={{ ...S.sm, color: "#8C8C8C", marginTop: 8, maxWidth: 340 }}>
+          {mode === "sign-in" ? "Sign in to continue your personalized program." : "Your workouts and progress will stay securely connected to you."}
+        </p>
+
+        <form onSubmit={submit} style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+          {mode === "sign-up" && (
+            <label style={S.authLabel}>
+              Name
+              <input
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                autoComplete="name"
+                required
+                placeholder="Your name"
+                style={S.authInput}
+              />
+            </label>
+          )}
+          <label style={S.authLabel}>
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+              style={S.authInput}
+            />
+          </label>
+          <label style={S.authLabel}>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+              minLength={6}
+              required
+              placeholder="At least 6 characters"
+              style={S.authInput}
+            />
+          </label>
+          {error && <p role="alert" style={{ ...S.xs, color: "#ff8d8d" }}>{error}</p>}
+          {message && <p role="status" style={{ ...S.xs, color: "#DDFB24", lineHeight: 1.5 }}>{message}</p>}
+          <button type="submit" disabled={submitting} style={{ ...S.btnPrimary, marginTop: 8, opacity: submitting ? 0.6 : 1 }}>
+            {submitting ? "Please wait…" : mode === "sign-in" ? "Sign In" : "Create Account"}
+          </button>
+        </form>
+
+        <button onClick={switchMode} style={{ marginTop: 18, background: "none", border: "none", color: "#ADADAD", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 14 }}>
+          {mode === "sign-in" ? "New to Momentum? Create an account" : "Already have an account? Sign in"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ──────────────────────────────────────────────────────────────────
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [tab, setTab] = useState("home");
   const [viewDay, setViewDay] = useState(null);
   const [expandedMeal, setExpandedMeal] = useState(null);
@@ -574,6 +697,7 @@ export default function App() {
   const [detailWorkout, setDetailWorkout] = useState(null); // alt workout being viewed
   const [expandedImg, setExpandedImg] = useState(null); // exercise name whose image is expanded
   const [savedWorkouts, setSavedWorkouts] = useState([]);
+  const [syncError, setSyncError] = useState("");
 
   const now = new Date();
   const dow = now.getDay();
@@ -605,52 +729,175 @@ export default function App() {
     : [];
 
   useEffect(() => {
-    try {
-      const done = localStorage.getItem("m:done"); if (done) setCompleted(JSON.parse(done));
-      const start = localStorage.getItem("m:start"); if (start) setStartDate(start);
-      const swap = localStorage.getItem("m:swap"); if (swap) setSwappedWorkout(JSON.parse(swap));
-      const saved = localStorage.getItem("m:saved"); if (saved) setSavedWorkouts(JSON.parse(saved));
-    } catch {}
-    setLoading(false);
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setSession(data.session);
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    const loadProgramState = async () => {
+      setLoading(true);
+      setSyncError("");
+
+      let localState = {
+        start_date: null,
+        completed_exercises: {},
+        swapped_workout: null,
+        saved_workouts: [],
+      };
+      try {
+        const readLocal = (name) => localStorage.getItem(`m:${session.user.id}:${name}`) ?? localStorage.getItem(`m:${name}`);
+        const done = readLocal("done");
+        const start = readLocal("start");
+        const swap = readLocal("swap");
+        const saved = readLocal("saved");
+        localState = {
+          start_date: start || null,
+          completed_exercises: done ? JSON.parse(done) : {},
+          swapped_workout: swap ? JSON.parse(swap) : null,
+          saved_workouts: saved ? JSON.parse(saved) : [],
+        };
+      } catch {}
+
+      const { data, error } = await supabase
+        .from("user_program_state")
+        .select("start_date, completed_exercises, swapped_workout, saved_workouts")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (!mounted) return;
+      if (profileError) {
+        setSyncError("Your account is connected, but the Momentum database still needs its setup scripts.");
+      } else if (profileData) {
+        setProfile(profileData);
+      } else {
+        const { data: newProfile } = await supabase
+          .from("profiles")
+          .insert({ id: session.user.id, display_name: session.user.user_metadata?.display_name || session.user.email?.split("@")[0] })
+          .select()
+          .single();
+        if (mounted) setProfile(newProfile);
+      }
+
+      if (error) {
+        setSyncError("Your account is connected, but the Momentum database still needs its setup script.");
+        setStartDate(localState.start_date);
+        setCompleted(localState.completed_exercises);
+        setSwappedWorkout(localState.swapped_workout);
+        setSavedWorkouts(localState.saved_workouts);
+        setLoading(false);
+        return;
+      }
+
+      const nextState = data || localState;
+      if (!data) {
+        const { error: insertError } = await supabase.from("user_program_state").insert({
+          user_id: session.user.id,
+          ...localState,
+        });
+        if (insertError) {
+          setSyncError("We couldn't create your Momentum data yet. Please try again after the database setup is complete.");
+        } else {
+          try {
+            ["m:done", "m:start", "m:swap", "m:saved"].forEach((key) => localStorage.removeItem(key));
+          } catch {}
+        }
+      } else {
+        try {
+          ["m:done", "m:start", "m:swap", "m:saved"].forEach((key) => localStorage.removeItem(key));
+        } catch {}
+      }
+
+      setStartDate(nextState.start_date);
+      setCompleted(nextState.completed_exercises || {});
+      setSwappedWorkout(nextState.swapped_workout || null);
+      setSavedWorkouts(nextState.saved_workouts || []);
+      setLoading(false);
+    };
+
+    loadProgramState();
+    return () => { mounted = false; };
+  }, [session?.user?.id]);
+
+  const persistUserState = async (changes) => {
+    if (!session?.user) return;
+    const { error } = await supabase.from("user_program_state").upsert({
+      user_id: session.user.id,
+      ...changes,
+    }, { onConflict: "user_id" });
+    setSyncError(error ? "Your latest change is saved on this device but has not synced yet." : "");
+  };
+
+  useEffect(() => {
+    if (!session?.user || loading || !profile?.onboarding_completed_at || startDate) return;
+
+    setStartDate(dateKey);
+    try { localStorage.setItem(`m:${session.user.id}:start`, dateKey); } catch {}
+    void persistUserState({ start_date: dateKey });
+  }, [session?.user?.id, loading, profile?.onboarding_completed_at, startDate, dateKey]);
 
   const toggle = (idx) => {
     const u = { ...completed };
     const d = u[dateKey] || [];
     u[dateKey] = d.includes(idx) ? d.filter(i => i !== idx) : [...d, idx];
     setCompleted(u);
-    try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
-  };
-
-  const begin = () => {
-    setStartDate(dateKey);
-    try { localStorage.setItem("m:start", dateKey); } catch {}
+    try { localStorage.setItem(`m:${session.user.id}:done`, JSON.stringify(u)); } catch {}
+    void persistUserState({ completed_exercises: u });
   };
 
   const swapWorkout = (altId) => {
     const s = { dateKey, altId };
     setSwappedWorkout(s);
-    try { localStorage.setItem("m:swap", JSON.stringify(s)); } catch {}
+    try { localStorage.setItem(`m:${session.user.id}:swap`, JSON.stringify(s)); } catch {}
     // Clear today's completions since workout changed
     const u = { ...completed, [dateKey]: [] };
     setCompleted(u);
-    try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
+    try { localStorage.setItem(`m:${session.user.id}:done`, JSON.stringify(u)); } catch {}
+    void persistUserState({ swapped_workout: s, completed_exercises: u });
     setTab("home");
     setDetailWorkout(null);
   };
 
   const clearSwap = () => {
     setSwappedWorkout(null);
-    try { localStorage.removeItem("m:swap"); } catch {}
+    try { localStorage.removeItem(`m:${session.user.id}:swap`); } catch {}
     const u = { ...completed, [dateKey]: [] };
     setCompleted(u);
-    try { localStorage.setItem("m:done", JSON.stringify(u)); } catch {}
+    try { localStorage.setItem(`m:${session.user.id}:done`, JSON.stringify(u)); } catch {}
+    void persistUserState({ swapped_workout: null, completed_exercises: u });
   };
 
   const toggleSaved = (id) => {
     const next = savedWorkouts.includes(id) ? savedWorkouts.filter(x => x !== id) : [...savedWorkouts, id];
     setSavedWorkouts(next);
-    try { localStorage.setItem("m:saved", JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(`m:${session.user.id}:saved`, JSON.stringify(next)); } catch {}
+    void persistUserState({ saved_workouts: next });
   };
 
   const filteredAlts = ALT_WORKOUTS.filter(a => {
@@ -661,18 +908,15 @@ export default function App() {
     return matchFilter && matchSearch;
   });
 
-  if (loading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading...</p></div>;
+  if (authLoading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading...</p></div>;
 
-  if (!startDate) return (
-    <div style={S.wrap}>
-      <div style={{ padding: "80px 24px", display: "flex", flexDirection: "column", alignItems: "center", gap: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 56 }}>⚡</div>
-        <h1 style={{ ...S.h2, margin: 0 }}>Momentum</h1>
-        <p style={{ ...S.sm, color: "#ADADAD", maxWidth: 280 }}>Glute-focused workouts + keto meals, personalized for you.</p>
-        <button style={S.btnPrimary} onClick={begin}>Let's Go</button>
-      </div>
-    </div>
-  );
+  if (!session) return <AuthScreen />;
+
+  if (loading) return <div style={S.wrap}><p style={{ color: "#DDFB24", textAlign: "center", paddingTop: "45vh", fontFamily: "'DM Sans',sans-serif" }}>Loading your program...</p></div>;
+
+  if (!profile?.onboarding_completed_at) {
+    return <OnboardingFlow user={session.user} profile={profile} onComplete={setProfile} />;
+  }
 
   // ── IMAGE EXPAND MODAL (overlays any screen) ──
   const ImageModal = expandedImg ? (
@@ -1069,8 +1313,12 @@ export default function App() {
             <path d="M63 49.4067H55.5V42.9067L63 42.9067V49.4067Z" fill="#DDFB24"/>
             <path d="M39.8091 49.4067V40.9382L47.3108 54.3933H47.9412L55.1908 41.0488V49.4067H59.6666V31.9067H55.0647L47.689 45.9516L39.9982 31.9067H35.3333V49.4067H39.8091Z" fill="#DDFB24"/>
           </svg>
-          <span style={{ ...S.xs, color: "#ADADAD", fontWeight: 600, letterSpacing: 1 }}>{DAYS[dow]}  {now.getDate()} {MONTHS[now.getMonth()]}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ ...S.xs, color: "#ADADAD", fontWeight: 600, letterSpacing: 1 }}>{DAYS[dow]}  {now.getDate()} {MONTHS[now.getMonth()]}</span>
+            <button onClick={() => supabase.auth.signOut()} style={{ ...S.btnText, fontSize: 11, padding: "5px 8px", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}>Sign out</button>
+          </div>
         </div>
+        {syncError && <p role="status" style={{ ...S.xs, color: "#ffcf70", marginTop: 12, lineHeight: 1.5 }}>{syncError}</p>}
         <h1 style={{ ...S.h2, marginTop: 12 }}>Let's Crush Today's Goals!</h1>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(221,251,36,0.06)", borderRadius: 20, padding: "5px 14px", marginTop: 10 }}>
           <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600 }}>Week {weekIdx + 1}: {WEEK_LABELS[weekIdx]}</span>
@@ -1243,6 +1491,9 @@ const S = {
   chip: { background: "rgba(255,255,255,0.05)", border: "1px solid #525252", borderRadius: 40, padding: "8px 12px", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 44 },
   chipOn: { background: "#DDFB24", border: "1px solid #DDFB24", color: "#000" },
   btnPrimary: { background: "linear-gradient(180deg,rgba(108,108,108,0.15),rgba(255,255,255,0)),#DDFB24", color: "#000", border: "1px solid rgba(255,255,255,0.56)", borderRadius: 12, padding: "11px 20px", fontSize: 16, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", width: "100%", boxShadow: "0 1px 2px rgba(55,62,13,0.5), 0 0 0 2px #5c6713" },
+  btnText: { background: "none", border: "none", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 14 },
+  authLabel: { display: "flex", flexDirection: "column", gap: 7, color: "#ADADAD", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif" },
+  authInput: { width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.05)", border: "1px solid #302F2F", borderRadius: 12, padding: "12px 14px", color: "#fff", outline: "none", fontFamily: "'DM Sans',sans-serif", fontSize: 14 },
   startBtn: { display: "inline-flex", alignItems: "center", gap: 4, background: "#DDFB24", color: "#000", borderRadius: 12, padding: "8px 8px 8px 14px", fontSize: 12, fontWeight: 600 },
   startIcon: { background: "#000", borderRadius: 100, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" },
   btnBack: { display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#DDFB24", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "8px 0" },
