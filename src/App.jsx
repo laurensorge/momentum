@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
 
+const DAY_WORKOUT_IMAGES = {
+  day1: "/images/main-glutes.png",
+  day2: "/images/main-back.png",
+  day3: "/images/main-quads.png",
+  day4: "/images/main-posture.png",
+  day5: "/images/main-burnout.png",
+};
+
 const WEEK_LABELS = ["Base", "Build", "Peak", "Deload"];
 
 const WORKOUTS = {
@@ -203,7 +211,7 @@ const DAY_CONFIG = {
   1: { type: "day1", label: "Glutes & Hamstrings", emoji: "🍑", tag: "Heavy" },
   2: { type: "day2", label: "Back & Rear Delts", emoji: "💪", tag: "Upper A" },
   3: { type: "day3", label: "Quads & Glutes", emoji: "🦵", tag: "Moderate-High" },
-  4: { type: "day4", label: "Back & Posture", emoji: "🎯", tag: "Upper B" },
+  4: { type: "day4", label: "Back & Posture", emoji: "🎯", tag: "Upper Back" },
   5: { type: "day5", label: "Glute Burnout", emoji: "🔥", tag: "Volume" },
   6: { type: null, label: "Active Recovery", emoji: "🧘", msg: "Walk, stretch, or yoga. Move gently." },
 };
@@ -300,6 +308,25 @@ const ALT_WORKOUTS = [
     ],
   },
 ];
+
+// Expanded exercise guidance shown in the full-screen image view. The short
+// coaching cues remain in each workout plan so cards stay easy to scan.
+const EXERCISE_LONG_DESCRIPTIONS = {
+  "Barbell Hip Thrust": "Set your upper back against the bench with the bar resting across your hips. Drive through your heels, tuck your chin, and lift until your ribs stay stacked over your pelvis. Pause and squeeze your glutes at the top, then lower under control.",
+  "Romanian Deadlift (BB)": "Stand tall with the bar close to your thighs and a soft bend in your knees. Push your hips back while keeping your spine neutral and the bar grazing your legs. Stop when your hamstrings are fully loaded, then press the floor away to stand.",
+  "Bulgarian Split Squat (DB)": "Place your back foot on a bench and step far enough forward to keep your front heel grounded. Lower straight down with a slight forward torso lean, then drive through the front heel. Keep your knee tracking over your toes throughout.",
+  "Cable Kickback": "Face the cable stack and brace your torso before moving the working leg. Sweep your heel back and slightly out without arching your lower back. Hold the glute contraction briefly, then return slowly until the hip is fully loaded.",
+  "Lying Hamstring Curl": "Lie face down with your knees aligned to the machine pivot and your hips pressed into the pad. Curl your heels toward your seat without lifting your hips. Lower slowly so the hamstrings control the entire negative.",
+  "Hip Abductor Machine": "Sit tall with your back supported and your feet planted. Push your knees apart from the hips while keeping your pelvis still, then pause at your widest comfortable position. Return slowly instead of letting the weight pull you closed.",
+  "Incline Walk": "Set a challenging incline that lets you maintain a steady, controlled pace. Keep your chest lifted, hold the rails only for balance, and drive each step through the heel. You should feel your glutes and calves working without needing to run.",
+  "Bodyweight Squat": "Stand with feet just outside hip width and brace before each rep. Sit your hips down and back while keeping your whole foot connected to the floor. Reach a comfortable depth, then stand by pushing evenly through both feet.",
+  "Walking Lunge": "Take a long step forward and lower until both knees bend comfortably. Keep your front heel heavy and your torso tall, then push through that heel to bring the back leg forward. Alternate sides while keeping your steps smooth and controlled.",
+  "Dead Bug": "Lie on your back with your ribs down and your low back gently connected to the floor. Extend the opposite arm and leg without letting your trunk rotate or arch. Return to the start, reset your brace, and switch sides.",
+  "Plank Hold": "Set your elbows beneath your shoulders and create one straight line from head to heels. Squeeze your glutes and brace as if preparing for a lift. Breathe slowly while keeping your hips from sagging or hiking.",
+};
+
+const exerciseLongDescription = (exercise) => EXERCISE_LONG_DESCRIPTIONS[exercise.name]
+  || `${exercise.notes} Focus on a controlled tempo, a stable torso, and a full range of motion that you can repeat with consistent form.`;
 
 const MEALS = {
   0: [
@@ -545,6 +572,7 @@ export default function App() {
   const todayExercises = swappedAlt ? swappedAlt.exercises : scheduledExercises;
   const todayTitle = swappedAlt ? swappedAlt.title : dc.label;
   const todayTag = swappedAlt ? swappedAlt.label : dc.tag;
+  const todayWorkoutImage = swappedAlt ? getImg(swappedAlt.exercises[0].name) : DAY_WORKOUT_IMAGES[dc.type];
   const pct = todayExercises.length > 0 ? Math.round((donesToday.length / todayExercises.length) * 100) : 0;
 
   // For viewing a specific day
@@ -623,7 +651,15 @@ export default function App() {
       <div style={{ maxWidth: 430, width: "100%" }}>
         <img src={getImg(expandedImg)} alt={expandedImg}
           style={{ width: "100%", borderRadius: 20, display: "block" }} />
-        <p style={{ ...S.md, fontWeight: 700, color: "#fff", marginTop: 16, textAlign: "center" }}>{expandedImg}</p>
+        <div style={{ padding: "0 8px" }}>
+          <p style={{ ...S.h4, color: "#fff", marginTop: 16 }}>{expandedImg}</p>
+          <p style={{ ...S.sm, color: "#ADADAD", marginTop: 8, lineHeight: 1.55 }}>
+            {exerciseLongDescription(
+              [...Object.values(WORKOUTS).flat(2), ...ALT_WORKOUTS.flatMap(w => w.exercises)]
+                .find(ex => ex.name === expandedImg) || { name: expandedImg, notes: "Move with control and maintain consistent form." }
+            )}
+          </p>
+        </div>
         <button onClick={() => setExpandedImg(null)} style={{
           ...S.btnPrimary, marginTop: 16,
         }}>Close</button>
@@ -954,6 +990,7 @@ export default function App() {
 
       {/* Today's Workout */}
       <div style={{ padding: "8px 16px" }}>
+        <h3 style={{ ...S.h5, marginBottom: 12 }}>Today's Workout</h3>
         {!todayConf.type ? (
           <div style={{ ...S.card, padding: 28, textAlign: "center" }}>
             <div style={{ fontSize: 44 }}>{todayConf.emoji}</div>
@@ -962,24 +999,30 @@ export default function App() {
           </div>
         ) : (
           <button onClick={() => setViewDay(dow)}
-            style={{ ...S.card, padding: 20, width: "100%", textAlign: "left", cursor: "pointer", border: "1px solid rgba(221,251,36,0.12)" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            style={{ ...S.card, position: "relative", overflow: "hidden", padding: 0, width: "100%", minHeight: 240, textAlign: "left", cursor: "pointer", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <img src={todayWorkoutImage} alt={`${todayTitle} workout`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.02) 20%, rgba(9,9,3,0.35) 50%, rgba(9,9,3,0.96) 100%)" }} />
+            <div style={{ position: "relative", zIndex: 1, minHeight: 240, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 8, padding: 16 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <span style={S.pill}>{todayTag}</span>
               <span style={S.pill}>{todayExercises.length} exercises</span>
               {todaySwap && <span style={{ ...S.pill, background: "rgba(221,251,36,0.1)", color: "#DDFB24" }}>Swapped</span>}
             </div>
-            <h3 style={S.h3}>{todayConf.emoji} {todayTitle}</h3>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 100, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: "#DDFB24", borderRadius: 2 }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                <h3 style={{ ...S.h4, maxWidth: "100%" }}>{todayConf.emoji} {todayTitle}</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 150, height: 6, background: "rgba(255,255,255,0.18)", borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: "#DDFB24", borderRadius: 99, transition: "width 0.4s" }} />
                 </div>
                 <span style={{ ...S.xs, color: pct === 100 ? "#DDFB24" : "#8C8C8C" }}>{pct === 100 ? "Done!" : `${donesToday.length}/${todayExercises.length}`}</span>
+                </div>
               </div>
-              <div style={S.startBtn}>
+              <div style={{ ...S.startBtn, flexShrink: 0 }}>
                 <span>{pct > 0 && pct < 100 ? "Continue" : "Start"}</span>
                 <span style={S.startIcon}>{I.right}</span>
               </div>
+            </div>
             </div>
           </button>
         )}
@@ -1103,11 +1146,12 @@ const S = {
   md: { fontSize: 16, lineHeight: 1.4, margin: 0 },
   sm: { fontSize: 14, lineHeight: 1.4, margin: 0 },
   xs: { fontSize: 12, lineHeight: 1.4, margin: 0 },
-  card: { background: "linear-gradient(180deg,#141414,#0a0707)", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 24 },
-  pill: { background: "rgba(245,245,245,0.05)", borderRadius: 40, padding: "4px 10px", fontSize: 12, color: "#fff" },
-  chip: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "8px 12px", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 44 },
-  chipOn: { background: "rgba(221,251,36,0.08)", border: "1px solid rgba(221,251,36,0.25)", color: "#DDFB24" },
-  btnPrimary: { background: "#DDFB24", color: "#000", border: "none", borderRadius: 14, padding: "16px 24px", fontSize: 16, fontWeight: 700, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", width: "100%" },
+  // Figma: Gradients/Card Fill + Card Stroke, 24px radius, 12px backdrop blur.
+  card: { background: "linear-gradient(180deg,#141414 0%,#0a0707 100%)", border: "0.5px solid rgba(255,255,255,0.2)", borderRadius: 24, backdropFilter: "blur(12px)" },
+  pill: { background: "rgba(245,245,245,0.05)", borderRadius: 40, padding: "4px 10px", fontSize: 12, color: "#fff", backdropFilter: "blur(8px)" },
+  chip: { background: "rgba(255,255,255,0.05)", border: "1px solid #525252", borderRadius: 40, padding: "8px 12px", color: "#8C8C8C", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, minWidth: 44 },
+  chipOn: { background: "#DDFB24", border: "1px solid #DDFB24", color: "#000" },
+  btnPrimary: { background: "linear-gradient(180deg,rgba(108,108,108,0.15),rgba(255,255,255,0)),#DDFB24", color: "#000", border: "1px solid rgba(255,255,255,0.56)", borderRadius: 12, padding: "11px 20px", fontSize: 16, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", cursor: "pointer", width: "100%", boxShadow: "0 1px 2px rgba(55,62,13,0.5), 0 0 0 2px #5c6713" },
   startBtn: { display: "inline-flex", alignItems: "center", gap: 4, background: "#DDFB24", color: "#000", borderRadius: 12, padding: "8px 8px 8px 14px", fontSize: 12, fontWeight: 600 },
   startIcon: { background: "#000", borderRadius: 100, width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" },
   btnBack: { display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", color: "#DDFB24", fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", padding: "8px 0" },
