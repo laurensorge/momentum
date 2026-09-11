@@ -7,6 +7,14 @@ const DAY_WORKOUT_IMAGES = {
   day4: "/images/main-posture.png",
   day5: "/images/main-burnout.png",
 };
+const ALT_WORKOUT_IMAGES = {
+  "glute-pump": "/images/workout-glute-pump-v2.png",
+  "lower-cardio": "/images/workout-lower-cardio-v2.png",
+  "core-focus": "/images/workout-core-stability-v2.png",
+  "full-body-light": "/images/workout-full-body-light-v2.png",
+  "posterior-chain": "/images/workout-posterior-chain-v2.png",
+  "stretch-yoga": "/images/workout-stretch-mobility-v2.png",
+};
 const SAVE_ICON_DEFAULT = "/images/save-default.svg";
 const SAVE_ICON_TAPPED = "/images/save-tapped.svg";
 
@@ -797,20 +805,24 @@ export default function App() {
           <div style={{ ...S.card, minHeight: 220, position: "relative", overflow: "hidden", border: "1px solid rgba(221,251,36,0.25)" }}>
             <img src={todayWorkoutImage} alt="" aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.06) 15%, rgba(9,9,3,0.88) 100%)" }} />
-            <div style={{ position: "relative", zIndex: 1, minHeight: 220, padding: 16, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-              <p style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, marginBottom: 2 }}>TODAY'S WORKOUT</p>
-              <p style={{ ...S.h4, fontWeight: 700 }}>{todayTitle}</p>
-              {todaySwap && <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 2 }}>Swapped from scheduled</p>}
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 12 }}>
-              {todaySwap && (
-                <button onClick={clearSwap} style={{ ...S.xs, color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-                  Reset
-                </button>
-              )}
-              <button onClick={() => { setViewDay(dow); setTab("home"); }} style={{ background: "#DDFB24", border: "none", borderRadius: 10, padding: "8px 8px 8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: "#000" }}>
-                View
-                <span style={{ background: "#000", borderRadius: 100, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>{I.right}</span>
-              </button>
+            <div style={{ position: "relative", zIndex: 1, minHeight: 220, padding: 16, display: "flex", alignItems: "flex-end" }}>
+              <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, marginBottom: 2 }}>TODAY'S WORKOUT</p>
+                  <p style={{ ...S.h4, fontWeight: 700 }}>{todayTitle}</p>
+                  {todaySwap && <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 2 }}>Swapped from scheduled</p>}
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                  {todaySwap && (
+                    <button onClick={clearSwap} style={{ ...S.xs, color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                      Reset
+                    </button>
+                  )}
+                  <button onClick={() => { setViewDay(dow); setTab("home"); }} style={{ background: "#DDFB24", border: "none", borderRadius: 10, padding: "8px 8px 8px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600, color: "#000" }}>
+                    View
+                    <span style={{ background: "#000", borderRadius: 100, width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>{I.right}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -861,8 +873,8 @@ export default function App() {
                     ...S.card, padding: 16, minHeight: 190, position: "relative", overflow: "hidden",
                     border: isActive ? "1px solid rgba(221,251,36,0.3)" : "0.5px solid rgba(255,255,255,0.12)",
                   }}>
-                    <img src={getImg(alt.exercises[0].name)} alt="" aria-hidden="true" style={{ position: "absolute", inset: "0 0 0 45%", width: "55%", height: "100%", objectFit: "cover", opacity: 0.9 }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #141414 28%, rgba(20,20,20,0.98) 43%, rgba(20,20,20,0.72) 62%, rgba(10,7,7,0.12) 100%), linear-gradient(180deg, transparent 48%, rgba(9,9,3,0.74) 100%)", pointerEvents: "none" }} />
+                    <img src={ALT_WORKOUT_IMAGES[alt.id] || getImg(alt.exercises[0].name)} alt="" aria-hidden="true" style={{ position: "absolute", inset: "0 0 0 42%", width: "58%", height: "100%", objectFit: "cover", objectPosition: "center", opacity: 1, filter: "contrast(1.04) saturate(0.92)" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #141414 24%, rgba(20,20,20,0.98) 40%, rgba(20,20,20,0.78) 57%, rgba(10,7,7,0.18) 82%, transparent 100%), linear-gradient(180deg, rgba(9,9,3,0.12) 0%, transparent 34%, rgba(9,9,3,0.78) 100%)", pointerEvents: "none" }} />
                     <button onClick={() => toggleSaved(alt.id)} aria-label={savedWorkouts.includes(alt.id) ? `Remove ${alt.title} from saved workouts` : `Save ${alt.title}`} style={{ position: "absolute", right: 12, top: 12, zIndex: 2, width: 40, height: 40, borderRadius: 12, border: "none", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 8 }}>
                       <img src={savedWorkouts.includes(alt.id) ? SAVE_ICON_TAPPED : SAVE_ICON_DEFAULT} alt="" width="24" height="24" />
                     </button>
