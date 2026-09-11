@@ -217,13 +217,26 @@ const WORKOUTS = {
 };
 
 const DAY_CONFIG = {
-  0: { type: null, label: "Rest Day", emoji: "😴", msg: "Full rest. You earned it." },
+  0: {
+    type: null,
+    label: "Rest Day",
+    emoji: "😴",
+    msg: "Full rest. You earned it.",
+    guidance: ["Skip structured training", "Keep movement easy and optional", "Prioritize sleep, hydration, and protein"],
+  },
   1: { type: "day1", label: "Glutes & Hamstrings", emoji: "🍑", tag: "Heavy" },
   2: { type: "day2", label: "Back & Rear Delts", emoji: "💪", tag: "Upper A" },
   3: { type: "day3", label: "Quads & Glutes", emoji: "🦵", tag: "Moderate-High" },
   4: { type: "day4", label: "Back & Posture", emoji: "🎯", tag: "Upper Back" },
   5: { type: "day5", label: "Glute Burnout", emoji: "🔥", tag: "Volume" },
-  6: { type: null, label: "Active Recovery", emoji: "🧘", msg: "Walk, stretch, or yoga. Move gently." },
+  6: {
+    type: null,
+    label: "Active Recovery",
+    emoji: "🧘",
+    msg: "Walk, stretch, or practice yoga. Keep the effort easy and leave feeling refreshed.",
+    guidance: ["20–30 minute easy walk", "8–10 minutes of mobility", "Breathe slowly and avoid fatigue"],
+    cta: "Browse mobility workouts",
+  },
 };
 
 // ─── ALTERNATIVE WORKOUTS (for swap) ─────────────────────────────────────
@@ -917,6 +930,49 @@ export default function App() {
     );
   }
 
+  // ── RECOVERY / REST DAY DETAIL ──
+  if (viewDay !== null && viewDayExercises.length === 0) {
+    const vdc = DAY_CONFIG[viewDay];
+    return (
+      <div style={S.wrap}>
+        <div style={{ padding: "16px" }}>
+          <button onClick={() => setViewDay(null)} style={S.btnBack}>{I.back} Back</button>
+          <div style={{ marginTop: 24 }}>
+            <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 600, textTransform: "uppercase", letterSpacing: 1 }}>
+              {viewDay === 6 ? "Recovery plan" : "Weekly reset"}
+            </span>
+            <div style={{ fontSize: 48, marginTop: 16 }}>{vdc.emoji}</div>
+            <h1 style={{ ...S.h2, marginTop: 8 }}>{vdc.label}</h1>
+            <p style={{ ...S.sm, color: "#ADADAD", lineHeight: 1.6, marginTop: 8, maxWidth: 360 }}>{vdc.msg}</p>
+          </div>
+
+          <div style={{ ...S.card, padding: 18, marginTop: 24, border: "1px solid rgba(255,255,255,0.1)" }}>
+            <p style={{ ...S.xs, color: "#656565", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
+              {viewDay === 6 ? "Keep it light" : "Today’s priorities"}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {vdc.guidance.map((item, idx) => (
+                <div key={item} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 9, background: "rgba(221,251,36,0.1)", color: "#DDFB24", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 700 }}>{idx + 1}</span>
+                  <span style={{ ...S.sm, color: "#fff" }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {vdc.cta && (
+            <button onClick={() => { setActiveFilter("Flexibility"); setSearchQuery(""); setViewDay(null); setTab("explore"); }} style={{ ...S.btnPrimary, width: "100%", marginTop: 16 }}>
+              {vdc.cta} {I.right}
+            </button>
+          )}
+        </div>
+        <div style={{ height: 120 }} />
+        <Nav tab={tab} setTab={setTab} setViewDay={setViewDay} setDetailWorkout={setDetailWorkout} />
+        {ImageModal}
+      </div>
+    );
+  }
+
   // ── WORKOUT DETAIL (scheduled day) ──
   if (viewDay !== null && viewDayExercises.length > 0) {
     const vdc = DAY_CONFIG[viewDay];
@@ -1027,11 +1083,12 @@ export default function App() {
       <div style={{ padding: "8px 16px" }}>
         <h3 style={{ ...S.h5, marginBottom: 12 }}>Today's Workout</h3>
         {!todayConf.type ? (
-          <div style={{ ...S.card, padding: 28, textAlign: "center" }}>
+          <button onClick={() => setViewDay(dow)} style={{ ...S.card, padding: 28, textAlign: "center", width: "100%", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", color: "#fff" }}>
             <div style={{ fontSize: 44 }}>{todayConf.emoji}</div>
             <h3 style={{ ...S.h4, marginTop: 10 }}>{todayConf.label}</h3>
             <p style={{ ...S.sm, color: "#ADADAD", marginTop: 6 }}>{todayConf.msg}</p>
-          </div>
+            <span style={{ ...S.xs, display: "inline-flex", alignItems: "center", gap: 4, color: "#DDFB24", fontWeight: 600, marginTop: 12 }}>View plan {I.right}</span>
+          </button>
         ) : (
           <button onClick={() => setViewDay(dow)}
             style={{ ...S.card, position: "relative", overflow: "hidden", padding: 0, width: "100%", minHeight: 240, textAlign: "left", cursor: "pointer", border: "1px solid rgba(255,255,255,0.2)" }}>
@@ -1106,18 +1163,17 @@ export default function App() {
           {[1,2,3,4,5,6,0].map(d => {
             const di = DAY_CONFIG[d];
             const isT = d === dow;
-            const has = !!di.type;
             return (
-              <button key={d} onClick={() => has && setViewDay(d)}
+              <button key={d} onClick={() => setViewDay(d)}
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14,
                   border: isT ? "1px solid rgba(221,251,36,0.15)" : "1px solid transparent",
                   background: isT ? "rgba(221,251,36,0.05)" : "transparent",
-                  cursor: has ? "pointer" : "default", width: "100%", textAlign: "left", fontFamily: "'DM Sans',sans-serif" }}>
+                  cursor: "pointer", width: "100%", textAlign: "left", fontFamily: "'DM Sans',sans-serif" }}>
                 <span style={{ ...S.xs, color: isT ? "#DDFB24" : "#656565", width: 32, fontWeight: 600 }}>{DAYS[d]}</span>
                 <span style={{ fontSize: 14 }}>{di.emoji}</span>
                 <span style={{ ...S.sm, color: isT ? "#fff" : "#ADADAD", flex: 1 }}>{di.label}</span>
                 {isT && <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 700, fontSize: 10 }}>TODAY</span>}
-                {has && !isT && <span style={{ color: "#302F2F" }}>{I.right}</span>}
+                {!isT && <span style={{ color: "#302F2F" }}>{I.right}</span>}
               </button>
             );
           })}
