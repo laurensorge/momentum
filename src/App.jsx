@@ -729,7 +729,9 @@ export default function App() {
   const todayExercises = swappedAlt ? swappedAlt.exercises : scheduledExercises;
   const todayTitle = swappedAlt ? swappedAlt.title : dc.label;
   const todayTag = swappedAlt ? swappedAlt.label : dc.tag;
-  const todayWorkoutImage = swappedAlt ? getImg(swappedAlt.exercises[0].name) : DAY_WORKOUT_IMAGES[dc.type];
+  const todayWorkoutImage = swappedAlt
+    ? (ALT_WORKOUT_IMAGES[swappedAlt.id] || getImg(swappedAlt.exercises[0].name))
+    : (DAY_WORKOUT_IMAGES[dc.type] || ALT_WORKOUT_IMAGES["stretch-yoga"]);
   const pct = todayExercises.length > 0 ? Math.round((donesToday.length / todayExercises.length) * 100) : 0;
 
   // For viewing a specific day
@@ -1366,11 +1368,26 @@ export default function App() {
       <div style={{ padding: "8px 16px" }}>
         <h3 style={{ ...S.h5, marginBottom: 12 }}>Today's Workout</h3>
         {!todayConf.type ? (
-          <button onClick={() => setViewDay(dow)} style={{ ...S.card, padding: 28, textAlign: "center", width: "100%", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", color: "#fff" }}>
-            <div style={{ fontSize: 44 }}>{todayConf.emoji}</div>
-            <h3 style={{ ...S.h4, marginTop: 10 }}>{todayConf.label}</h3>
-            <p style={{ ...S.sm, color: "#ADADAD", marginTop: 6 }}>{todayConf.msg}</p>
-            <span style={{ ...S.xs, display: "inline-flex", alignItems: "center", gap: 4, color: "#DDFB24", fontWeight: 600, marginTop: 12 }}>View plan {I.right}</span>
+          <button onClick={() => setViewDay(dow)}
+            style={{ ...S.card, position: "relative", overflow: "hidden", padding: 0, width: "100%", minHeight: 240, textAlign: "left", cursor: "pointer", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <img src={ALT_WORKOUT_IMAGES["stretch-yoga"]} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(9,9,3,0.02) 20%, rgba(9,9,3,0.35) 50%, rgba(9,9,3,0.96) 100%)" }} />
+            <div style={{ position: "relative", zIndex: 1, minHeight: 240, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 8, padding: 16 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span style={S.pill}>{dow === 6 ? "Recovery" : "Rest"}</span>
+                <span style={S.pill}>{dow === 6 ? "Easy pace" : "Recharge"}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h3 style={S.h4}>{todayConf.emoji} {todayConf.label}</h3>
+                  <p style={{ ...S.sm, color: "#ADADAD", marginTop: 6 }}>{dow === 6 ? "Easy movement. Feel refreshed." : todayConf.msg}</p>
+                </div>
+                <div style={{ ...S.startBtn, flexShrink: 0 }}>
+                  <span>View plan</span>
+                  <span style={S.startIcon}>{I.right}</span>
+                </div>
+              </div>
+            </div>
           </button>
         ) : (
           <button onClick={() => setViewDay(dow)}
@@ -1446,6 +1463,19 @@ export default function App() {
           {[1,2,3,4,5,6,0].map(d => {
             const di = DAY_CONFIG[d];
             const isT = d === dow;
+            const rowDate = new Date(now);
+            rowDate.setDate(now.getDate() - ((dow + 6) % 7) + ((d + 6) % 7));
+            // Match the date keys used by the existing saved exercise checkoffs.
+            const rowKey = rowDate.toISOString().split("T")[0];
+            const rowWeek = startDate
+              ? Math.max(0, Math.min(3, Math.floor(Math.floor((rowDate - new Date(startDate)) / 86400000) / 7) % 4))
+              : 0;
+            const rowSwap = swappedWorkout?.dateKey === rowKey
+              ? ALT_WORKOUTS.find(alt => alt.id === swappedWorkout.altId) : null;
+            const rowExercises = rowSwap?.exercises || (di.type ? WORKOUTS[di.type]?.[rowWeek] || [] : []);
+            const savedChecks = completed[rowKey] || [];
+            const checkedCount = rowExercises.filter((_, index) => savedChecks.includes(index)).length;
+            const isComplete = rowExercises.length > 0 && checkedCount === rowExercises.length;
             return (
               <button key={d} onClick={() => setViewDay(d)}
                 style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 14,
@@ -1454,9 +1484,13 @@ export default function App() {
                   cursor: "pointer", width: "100%", textAlign: "left", fontFamily: "'DM Sans',sans-serif" }}>
                 <span style={{ ...S.xs, color: isT ? "#DDFB24" : "#656565", width: 32, fontWeight: 600 }}>{DAYS[d]}</span>
                 <span style={{ fontSize: 14 }}>{di.emoji}</span>
-                <span style={{ ...S.sm, color: isT ? "#fff" : "#ADADAD", flex: 1 }}>{di.label}</span>
+                <span style={{ ...S.sm, color: isT ? "#fff" : "#ADADAD", flex: 1 }}>
+                  {rowSwap?.title || di.label}
+                  {checkedCount > 0 && !isComplete && <span style={{ ...S.xs, display: "block", color: "#8C8C8C", marginTop: 3 }}>{checkedCount}/{rowExercises.length} exercises</span>}
+                </span>
+                {isComplete && <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 700, fontSize: 10, flexShrink: 0 }}>✓ COMPLETED</span>}
                 {isT && <span style={{ ...S.xs, color: "#DDFB24", fontWeight: 700, fontSize: 10 }}>TODAY</span>}
-                {!isT && <span style={{ color: "#302F2F" }}>{I.right}</span>}
+                {!isT && !isComplete && <span style={{ color: "#302F2F" }}>{I.right}</span>}
               </button>
             );
           })}
