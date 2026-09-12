@@ -3,6 +3,9 @@ import { supabase } from "./lib/supabase";
 import OnboardingFlow from "./onboarding/OnboardingFlow";
 import PlanMockup from "./PlanMockup";
 import ProgramLoading from "./ProgramLoading";
+import Settings from './Settings';
+import FoundationsHome from './programs/FoundationsHome';
+import { createFoundations, supportsFoundations } from './programs/foundations';
 
 const DAY_WORKOUT_IMAGES = {
   day1: "/images/main-glutes.png",
@@ -689,6 +692,9 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [tab, setTab] = useState("home");
   const [showPlanMockup, setShowPlanMockup] = useState(false);
+  const [assignment, setAssignment] = useState(null);
+  const [assignmentLoading, setAssignmentLoading] = useState(true);
+  const [assignmentError, setAssignmentError] = useState('');
   const [viewDay, setViewDay] = useState(null);
   const [expandedMeal, setExpandedMeal] = useState(null);
   const [completed, setCompleted] = useState({});
@@ -858,6 +864,25 @@ export default function App() {
   };
 
   useEffect(() => {
+    let live = true;
+    setAssignment(null);
+    if (!session?.user?.id) { setAssignmentLoading(false); return; }
+    setAssignmentLoading(true);
+    supabase.from('program_assignments').select('*').eq('user_id', session.user.id).eq('status', 'active').maybeSingle().then(({ data, error }) => {
+      if (!live) return;
+      setAssignment(data); setAssignmentError(error ? 'Couldn’t load your saved program. Reload to try again.' : ''); setAssignmentLoading(false);
+    }).catch(() => { if (live) { setAssignmentError('Couldn’t load your saved program. Reload to try again.'); setAssignmentLoading(false); } });
+    return () => { live = false; };
+  }, [session?.user?.id]);
+
+  const startFoundations = async () => {
+    const draft = createFoundations(profile);
+    const { data, error } = await supabase.from('program_assignments').insert(draft).select().single();
+    if (error) throw error;
+    setAssignment(data); setTab('home'); setViewDay(null); setDetailWorkout(null); setShowPlanMockup(false);
+  };
+
+  useEffect(() => {
     if (!session?.user || loading || !profile?.onboarding_completed_at || startDate) return;
 
     setStartDate(dateKey);
@@ -915,13 +940,16 @@ export default function App() {
 
   if (!session) return <AuthScreen />;
 
-  if (loading) return <ProgramLoading />;
+  if (loading || assignmentLoading) return <ProgramLoading />;
 
   if (!profile?.onboarding_completed_at) {
     return <OnboardingFlow user={session.user} profile={profile} onComplete={setProfile} />;
   }
 
-  if (showPlanMockup) return <PlanMockup initialScreen="settings" onClose={() => setShowPlanMockup(false)} onSignOut={async () => { const { error } = await supabase.auth.signOut(); if (error) throw error; setShowPlanMockup(false); }} />;
+  if (showPlanMockup) return <Settings profile={profile} onProfileChange={setProfile} onClose={() => setShowPlanMockup(false)} onStartProgram={!assignment && !assignmentError && supportsFoundations(profile) ? startFoundations : undefined} activeProgram={assignment?.prescription?.title} onSignOut={async () => { const { error } = await supabase.auth.signOut(); if (error) throw error; setShowPlanMockup(false); }} />;
+
+  if (assignmentError) return <main className="pm"><div className="pm-content" style={{ paddingTop: 40 }}><p role="alert">{assignmentError}</p><button className="pm-primary" onClick={() => window.location.reload()}>Retry</button><button className="pm-secondary" onClick={() => setShowPlanMockup(true)}>Settings</button></div></main>;
+  if (assignment?.template_key === 'foundations' && tab === 'home') return <FoundationsHome assignment={assignment} onSettings={() => setShowPlanMockup(true)} onNutrition={() => setTab('nutrition')} />;
 
   // ── IMAGE EXPAND MODAL (overlays any screen) ──
   const ImageModal = expandedImg ? (

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import BodyFocus from "../BodyFocus";
+import PreferenceChoices from './PreferenceChoices';
+import { preferencesFromProfile, preferenceFields } from './preferences';
 import "../plan-mockup.css";
 import { ACTIVITIES, EQUIPMENT, FREQUENCIES, GOALS, LEVELS, buildPersonalizedPlan } from "./personalization";
 
@@ -9,8 +11,9 @@ const STEPS = [
   { key: "level", title: "What’s your current fitness level? 💪", subtitle: "Select one option.", type: "single", options: LEVELS },
   { key: "focus", title: "Where do you want to focus?", subtitle: "Select the areas you’d like to prioritize. Leave everything unselected for a balanced plan.", type: "body" },
   { key: "activities", title: "What types of activities do you enjoy? 🏋️", subtitle: "Select all that apply.", type: "multi", options: ACTIVITIES },
-  { key: "equipment", title: "What equipment do you have access to? 🚴", subtitle: "Select all that apply.", type: "multi", options: EQUIPMENT },
-  { key: "frequency", title: "How often do you want to workout? 🏃", subtitle: "Select one option.", type: "single", options: FREQUENCIES },
+  { key: "equipment", title: "What equipment do you have access to? 🚴", subtitle: "Select all that apply. Leave blank for bodyweight workouts.", type: "preferences" },
+  { key: "days", title: "Which days work for you?", subtitle: "Pick your training days. We’ll work recovery into your schedule.", type: "preferences" },
+  { key: "time", title: "How much time do you have?", subtitle: "Choose your usual session length.", type: "preferences" },
 ];
 
 const DEFAULTS = {
@@ -71,7 +74,7 @@ function ChoiceCard({ option, selected, onClick }) {
 
 export default function OnboardingFlow({ user, profile, onComplete, preview = false, previewStartAtFocus = false }) {
   const [step, setStep] = useState(preview && previewStartAtFocus ? STEPS.findIndex(item => item.key === 'focus') : 0);
-  const [answers, setAnswers] = useState(DEFAULTS);
+  const [answers, setAnswers] = useState(() => preferencesFromProfile(profile));
   const [success, setSuccess] = useState(false);
   const [savedProfile, setSavedProfile] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -97,6 +100,7 @@ export default function OnboardingFlow({ user, profile, onComplete, preview = fa
   };
 
   const next = async () => {
+    if (current.key === 'days' && !answers.days.length) return;
     if (step < STEPS.length - 1) {
       setStep(step + 1);
       return;
@@ -112,11 +116,7 @@ export default function OnboardingFlow({ user, profile, onComplete, preview = fa
     const { data, error: saveError } = await supabase
       .from("profiles")
       .update({
-        fitness_goal: answers.goal,
-        fitness_level: answers.level,
-        preferred_activities: answers.activities,
-        available_equipment: answers.equipment,
-        workout_frequency: answers.frequency,
+        ...preferenceFields(answers),
         personalized_plan: plan,
         onboarding_completed_at: completedAt,
       })
@@ -176,7 +176,7 @@ export default function OnboardingFlow({ user, profile, onComplete, preview = fa
           <p style={styles.subtitle}>{current.subtitle}</p>
         </div>
         <div style={{ display: "flex", flexDirection: current.type === "multi" ? "row" : "column", flexWrap: "wrap", gap: current.type === "multi" ? 10 : 16, marginTop: current.type === "body" ? 16 : 28 }}>
-          {current.type === "body" ? <div className="pm" style={{ width: "100%", minHeight: 0, background: "transparent", paddingBottom: 0 }}><BodyFocus hideHeading plan={answers} onChange={setAnswers} /></div> : current.options.map((option) => current.type === "multi" ? (
+          {current.type === 'preferences' ? <div className="pm" style={{ width: '100%', minHeight: 0, background: 'transparent', paddingBottom: 0 }}><PreferenceChoices kind={current.key} answers={answers} onChange={setAnswers} /></div> : current.type === "body" ? <div className="pm" style={{ width: "100%", minHeight: 0, background: "transparent", paddingBottom: 0 }}><BodyFocus hideHeading plan={answers} onChange={setAnswers} /></div> : current.options.map((option) => current.type === "multi" ? (
             <button key={option} type="button" onClick={() => choose(option)} style={{
               padding: "10px 14px", borderRadius: 999, fontFamily: "'DM Sans',sans-serif", fontSize: 15, fontWeight: 600, cursor: "pointer",
               background: selected(option) ? "#DDFB24" : "#141414", color: selected(option) ? "#000" : "#fff",
@@ -188,8 +188,8 @@ export default function OnboardingFlow({ user, profile, onComplete, preview = fa
         </div>
         <div style={{ marginTop: "auto", paddingTop: 28 }}>
           {error && <p role="alert" style={{ color: "#ff9a9a", fontSize: 12, marginBottom: 10 }}>{error}</p>}
-          <button type="button" onClick={next} disabled={saving} style={{ ...styles.primary, opacity: saving ? 0.6 : 1 }}>{saving ? "Building your plan…" : "Next"}</button>
-          <button type="button" onClick={() => step < STEPS.length - 1 ? setStep(step + 1) : next()} style={styles.skip}>Skip</button>
+          <button type="button" onClick={next} disabled={saving || (current.key === 'days' && !answers.days.length)} style={{ ...styles.primary, opacity: saving || (current.key === 'days' && !answers.days.length) ? 0.6 : 1 }}>{saving ? "Building your plan…" : "Next"}</button>
+          {current.key !== 'days' && <button type="button" onClick={() => step < STEPS.length - 1 ? setStep(step + 1) : next()} style={styles.skip}>Skip</button>}
         </div>
       </section>
     </main>

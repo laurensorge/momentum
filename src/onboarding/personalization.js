@@ -77,17 +77,21 @@ export function buildPersonalizedPlan(answers) {
   const frequency = FREQUENCIES.find((item) => item.id === answers.frequency) || FREQUENCIES[1];
   const preferred = answers.activities.map((activity) => ACTIVITY_FOCUS[activity]).filter(Boolean);
   const focusPool = [...new Set([...preferred, ...goal.focus])];
-  const weeklySchedule = Array.from({ length: frequency.days }, (_, index) => ({
+  const days = answers.days || Array.from({ length: frequency.days }, (_, i) => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]);
+  const weeklySchedule = days.map((weekday, index) => ({
     day: index + 1,
+    weekday,
     focus: focusPool[index % focusPool.length],
-    duration_minutes: answers.level === "beginner" ? 35 : answers.level === "advanced" ? 55 : 45,
+    duration_minutes: answers.time ? Number(answers.time.split('–')[0]) + 5 : 35,
   }));
 
   return {
     version: 1,
     title: goal.title,
     description: goal.description,
-    days_per_week: frequency.days,
+    days_per_week: days.length,
+    training_days: days,
+    session_length: answers.time || '30–40',
     level: answers.level,
     available_equipment: answers.equipment,
     preferred_activities: answers.activities,
