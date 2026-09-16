@@ -723,7 +723,7 @@ export default function App() {
   const todayExercises = swappedAlt ? swappedAlt.exercises : scheduledExercises;
   const todayTitle = swappedAlt ? swappedAlt.title : dc.label;
   const todayTag = swappedAlt ? swappedAlt.label : dc.tag;
-  const todayWorkoutImage = swappedAlt ? getImg(swappedAlt.exercises[0].name) : (DAY_WORKOUT_IMAGES[dc.type] || ALT_WORKOUT_IMAGES["stretch-yoga"]);
+  const todayWorkoutImage = (swappedAlt ? ALT_WORKOUT_IMAGES[swappedAlt.id] : DAY_WORKOUT_IMAGES[dc.type]) || ALT_WORKOUT_IMAGES["stretch-yoga"];
   const pct = todayExercises.length > 0 ? Math.round((donesToday.length / todayExercises.length) * 100) : 0;
 
   // For viewing a specific day
