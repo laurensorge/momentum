@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { WorkoutCompletion } from './CompletionPreview';
+import { allExercisesComplete, shouldCelebrateCompletion } from './completion';
 import { supabase } from "./lib/supabase";
 import OnboardingFlow from "./onboarding/OnboardingFlow";
 import PlanMockup from "./PlanMockup";
@@ -231,7 +233,7 @@ const DAY_CONFIG = {
   1: { type: "day1", label: "Glutes & Hamstrings", emoji: "🍑", tag: "Heavy" },
   2: { type: "day2", label: "Back & Rear Delts", emoji: "💪", tag: "Upper A" },
   3: { type: "day3", label: "Quads & Glutes", emoji: "🦵", tag: "Moderate-High" },
-  4: { type: "day4", label: "Back & Posture", emoji: "🎯", tag: "Upper Back" },
+  4: { type: "day4", label: "Back & Posture", emoji: "🧍", tag: "Upper Back" },
   5: { type: "day5", label: "Glute Burnout", emoji: "🔥", tag: "Volume" },
   6: {
     type: null,
@@ -247,6 +249,7 @@ const DAY_CONFIG = {
 const ALT_WORKOUTS = [
   {
     id: "glute-pump",
+    emoji: "🍑",
     label: "Glutes",
     title: "Glute Pump",
     desc: "High-rep burnout, no barbell needed",
@@ -262,6 +265,7 @@ const ALT_WORKOUTS = [
   },
   {
     id: "lower-cardio",
+    emoji: "🏃",
     label: "Cardio",
     title: "Lower Body Cardio",
     desc: "Fat burn + legs — no heavy lifting",
@@ -276,6 +280,7 @@ const ALT_WORKOUTS = [
   },
   {
     id: "core-focus",
+    emoji: "🧘",
     label: "Core",
     title: "Core & Stability",
     desc: "Abs, posture, and anti-rotation work",
@@ -291,6 +296,7 @@ const ALT_WORKOUTS = [
   },
   {
     id: "full-body-light",
+    emoji: "🏋️",
     label: "Full Body",
     title: "Full Body Light",
     desc: "Active recovery — move without crushing yourself",
@@ -306,6 +312,7 @@ const ALT_WORKOUTS = [
   },
   {
     id: "posterior-chain",
+    emoji: "💪",
     label: "Glutes",
     title: "Posterior Chain",
     desc: "Back of body — glutes, hamstrings, lats",
@@ -321,6 +328,7 @@ const ALT_WORKOUTS = [
   },
   {
     id: "stretch-yoga",
+    emoji: "🧘",
     label: "Flexibility",
     title: "Stretch & Mobility",
     desc: "Recovery day — open your hips and hamstrings",
@@ -701,11 +709,16 @@ export default function App() {
   const [expandedImg, setExpandedImg] = useState(null); // exercise name whose image is expanded
   const [savedWorkouts, setSavedWorkouts] = useState([]);
   const [syncError, setSyncError] = useState("");
+  const [completionRecords, setCompletionRecords] = useState({});
+  const [celebration, setCelebration] = useState(null);
+  const checkoffBusy = useRef(false);
+  const currentUser = useRef(null);
+  currentUser.current = session?.user?.id;
 
   const now = new Date();
   const dow = now.getDay();
   const activeDay = viewDay !== null ? viewDay : dow;
-  const dc = DAY_CONFIG[activeDay];
+  const dc = DAY_CONFIG[dow];
   const dateKey = now.toISOString().split("T")[0];
   const donesToday = completed[dateKey] || [];
 
@@ -728,7 +741,7 @@ export default function App() {
 
   // For viewing a specific day
   const viewDayExercises = viewDay !== null
-    ? (DAY_CONFIG[viewDay].type ? (WORKOUTS[DAY_CONFIG[viewDay].type]?.[weekIdx] || []) : [])
+    ? (viewDay === dow && swappedAlt ? todayExercises : DAY_CONFIG[viewDay].type ? (WORKOUTS[DAY_CONFIG[viewDay].type]?.[weekIdx] || []) : [])
     : [];
 
   useEffect(() => {
@@ -784,7 +797,7 @@ export default function App() {
 
       const { data, error } = await supabase
         .from("user_program_state")
-        .select("start_date, completed_exercises, swapped_workout, saved_workouts")
+        .select("start_date, completed_exercises, swapped_workout, saved_workouts, completion_records")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
@@ -819,6 +832,8 @@ export default function App() {
       }
 
       const nextState = data || localState;
+      setCompletionRecords(data?.completion_records || {});
+      setCelebration(null);
       if (!data) {
         const { error: insertError } = await supabase.from("user_program_state").insert({
           user_id: session.user.id,
@@ -865,16 +880,47 @@ export default function App() {
     void persistUserState({ start_date: dateKey });
   }, [session?.user?.id, loading, profile?.onboarding_completed_at, startDate, dateKey]);
 
-  const toggle = (idx) => {
+  const completionKey = `${dateKey}:${todaySwap || dc.type}:w${weekIdx}`;
+  const countWeek = (records, checks) => {
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(now); day.setDate(now.getDate() - ((dow + 6) % 7) + i);
+      if (day > now) continue;
+      const key = day.toISOString().split('T')[0];
+      const logged = Object.values(records).filter(r => r.date === key);
+      if (logged.length) { count += logged.filter(r => r.complete).length; continue; }
+      const config = DAY_CONFIG[day.getDay()];
+      const w = startDate ? Math.max(0, Math.min(3, Math.floor(Math.floor((day - new Date(startDate)) / 86400000) / 7) % 4)) : 0;
+      const exercises = key === dateKey ? todayExercises : (WORKOUTS[config.type]?.[w] || []);
+      if (exercises.length && exercises.every((_, index) => (checks[key] || []).includes(index))) count++;
+    }
+    return count;
+  };
+  const toggle = async (idx) => {
+    if (checkoffBusy.current || !session?.user || !todayExercises[idx]) return;
+    checkoffBusy.current = true;
+    const userId = session.user.id;
     const u = { ...completed };
     const d = u[dateKey] || [];
     u[dateKey] = d.includes(idx) ? d.filter(i => i !== idx) : [...d, idx];
-    setCompleted(u);
-    try { localStorage.setItem(`m:${session.user.id}:done`, JSON.stringify(u)); } catch {}
-    void persistUserState({ completed_exercises: u });
+    const allDone = allExercisesComplete(todayExercises, u[dateKey]);
+    const record = { ...completionRecords[completionKey], date: dateKey, title: todayTitle, image: todayWorkoutImage, exerciseCount: todayExercises.length, complete: allDone, completedAt: allDone ? new Date().toISOString() : null };
+    const shouldCelebrate = shouldCelebrateCompletion(todayExercises, u[dateKey], completionRecords[completionKey]);
+    if (shouldCelebrate) record.celebratedAt = new Date().toISOString();
+    const records = { ...completionRecords, [completionKey]: record };
+    try {
+      const { error } = await supabase.from('user_program_state').upsert({ user_id: userId, completed_exercises: u, completion_records: records }, { onConflict: 'user_id' });
+      if (error) throw error;
+      if (currentUser.current !== userId) return;
+      setCompleted(u); setCompletionRecords(records); setSyncError('');
+      try { localStorage.setItem(`m:${userId}:done`, JSON.stringify(u)); } catch {}
+      if (shouldCelebrate) { setCelebration({ userId, key: completionKey, workout: record, weeklyCount: countWeek(records, u) }); window.scrollTo(0, 0); }
+    } catch { if (currentUser.current === userId) setSyncError('Couldn’t save your checkoff. Please tap the exercise again to retry.'); }
+    finally { checkoffBusy.current = false; }
   };
 
   const swapWorkout = (altId) => {
+    if (checkoffBusy.current) return;
     const s = { dateKey, altId };
     setSwappedWorkout(s);
     try { localStorage.setItem(`m:${session.user.id}:swap`, JSON.stringify(s)); } catch {}
@@ -888,6 +934,7 @@ export default function App() {
   };
 
   const clearSwap = () => {
+    if (checkoffBusy.current) return;
     setSwappedWorkout(null);
     try { localStorage.removeItem(`m:${session.user.id}:swap`); } catch {}
     const u = { ...completed, [dateKey]: [] };
@@ -916,6 +963,13 @@ export default function App() {
   if (!session) return <AuthScreen />;
 
   if (loading) return <ProgramLoading />;
+
+  if (celebration?.userId === session.user.id) return <WorkoutCompletion key={celebration.key} workout={celebration.workout} weeklyCount={celebration.weeklyCount} onClose={() => setCelebration(null)} onHome={() => { setCelebration(null); setViewDay(null); setDetailWorkout(null); setTab('home'); window.scrollTo(0, 0); }} onFeeling={async feeling => {
+    const records = { ...completionRecords, [celebration.key]: { ...celebration.workout, ...completionRecords[celebration.key], feeling } };
+    const { error } = await supabase.from('user_program_state').update({ completion_records: records }).eq('user_id', session.user.id);
+    if (error) throw error;
+    if (currentUser.current === celebration.userId) setCompletionRecords(records);
+  }} />;
 
   if (!profile?.onboarding_completed_at) {
     return <OnboardingFlow user={session.user} profile={profile} onComplete={setProfile} />;
@@ -1074,9 +1128,9 @@ export default function App() {
                   <p style={{ ...S.h4, fontWeight: 700 }}>{todayTitle}</p>
                   {todaySwap && <p style={{ ...S.xs, color: "#8C8C8C", marginTop: 2 }}>Swapped from scheduled</p>}
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "stretch", flexShrink: 0 }}>
                   {todaySwap && (
-                    <button onClick={clearSwap} style={{ ...S.xs, color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+                    <button onClick={clearSwap} style={{ color: "#8C8C8C", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontFamily: "'DM Sans',sans-serif", fontSize: 12, fontWeight: 600 }}>
                       Reset
                     </button>
                   )}
@@ -1239,7 +1293,8 @@ export default function App() {
               <span style={{ ...S.xs, color: "#302F2F" }}>·</span>
               <span style={{ ...S.xs, color: "#8C8C8C" }}>Week {weekIdx + 1} — {WEEK_LABELS[weekIdx]}</span>
             </div>
-            <h1 style={{ ...S.h2, marginTop: 6 }}>{vdc.emoji} {ttl}</h1>
+            <h1 style={{ ...S.h2, marginTop: 6 }}>{ttl}</h1>
+            {syncError && <p role="alert" style={{ ...S.xs, color: '#ffcf70', marginTop: 12 }}>{syncError}</p>}
             {isToday && todaySwap && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
                 <span style={{ ...S.xs, color: "#8C8C8C" }}>Swapped from scheduled ·</span>
@@ -1290,8 +1345,7 @@ export default function App() {
           </div>
           {pct === 100 && isToday && (
             <div style={{ textAlign: "center", padding: "28px 0" }}>
-              <div style={{ fontSize: 44 }}>🎉</div>
-              <p style={{ ...S.h4, marginTop: 8, color: "#DDFB24" }}>Crushed it!</p>
+              <button style={S.btnPrimary} onClick={() => { setCelebration({ userId: session.user.id, key: completionKey, workout: { date: dateKey, title: todayTitle, image: todayWorkoutImage, exerciseCount: todayExercises.length, complete: true, ...completionRecords[completionKey] }, weeklyCount: countWeek(completionRecords, completed) }); window.scrollTo(0, 0); }}>View workout summary</button>
             </div>
           )}
         </div>
@@ -1337,7 +1391,7 @@ export default function App() {
       {/* Today's Workout */}
       <div style={{ padding: "8px 16px" }}>
         <h3 style={{ ...S.h5, marginBottom: 12 }}>Today's Workout</h3>
-        {!todayConf.type ? (
+        {!todayConf.type && !swappedAlt ? (
           <button onClick={() => setViewDay(dow)}
             style={{ ...S.card, position: "relative", overflow: "hidden", padding: 0, width: "100%", minHeight: 240, textAlign: "left", cursor: "pointer", border: "1px solid rgba(255,255,255,0.2)" }}>
             <img src={ALT_WORKOUT_IMAGES["stretch-yoga"]} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1349,7 +1403,7 @@ export default function App() {
               </div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={S.h4}>{todayConf.emoji} {todayConf.label}</h3>
+                  <h3 style={S.h4}>{todayConf.label}</h3>
                   <p style={{ ...S.sm, color: "#ADADAD", marginTop: 6 }}>{dow === 6 ? "Easy movement. Feel refreshed." : todayConf.msg}</p>
                 </div>
                 <div style={{ ...S.startBtn, flexShrink: 0 }}>
@@ -1372,7 +1426,7 @@ export default function App() {
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-                <h3 style={{ ...S.h4, maxWidth: "100%" }}>{todayConf.emoji} {todayTitle}</h3>
+                <h3 style={{ ...S.h4, maxWidth: "100%" }}>{todayTitle}</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 150, height: 6, background: "rgba(255,255,255,0.18)", borderRadius: 99, overflow: "hidden" }}>
                   <div style={{ width: `${pct}%`, height: "100%", background: "#DDFB24", borderRadius: 99, transition: "width 0.4s" }} />
@@ -1453,7 +1507,7 @@ export default function App() {
                   background: isT ? "rgba(221,251,36,0.05)" : "transparent",
                   cursor: "pointer", width: "100%", textAlign: "left", fontFamily: "'DM Sans',sans-serif" }}>
                 <span style={{ ...S.xs, color: isT ? "#DDFB24" : "#656565", width: 32, fontWeight: 600 }}>{DAYS[d]}</span>
-                <span style={{ fontSize: 14 }}>{di.emoji}</span>
+                <span aria-hidden="true" style={{ fontSize: 14 }}>{rowSwap?.emoji || di.emoji}</span>
                 <span style={{ ...S.sm, color: isT ? "#fff" : "#ADADAD", flex: 1 }}>
                   {rowSwap?.title || di.label}
                   {checkedCount > 0 && !isComplete && <span style={{ ...S.xs, display: "block", color: "#8C8C8C", marginTop: 3 }}>{checkedCount}/{rowExercises.length} exercises</span>}

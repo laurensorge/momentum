@@ -4,11 +4,13 @@ import App from './App.jsx'
 import PlanMockup from './PlanMockup.jsx'
 import OnboardingFlow from './onboarding/OnboardingFlow.jsx'
 import ProgramLoading from './ProgramLoading.jsx'
+import CompletionPreview from './CompletionPreview.jsx'
 
 const preview = new URLSearchParams(window.location.search).get('preview')
+const RootApp = preview === 'completion' ? CompletionPreview : App
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {preview === 'settings' ? <PlanMockup initialScreen="settings" onClose={() => window.location.assign('/')} /> : preview === 'loading' ? <ProgramLoading /> : ['onboarding', 'onboarding-focus'].includes(preview) ? <OnboardingFlow preview previewStartAtFocus={preview === 'onboarding-focus'} onComplete={() => window.location.assign('/')} /> : preview === 'manage-plan' ? <PlanMockup /> : <App />}
+    {preview === 'settings' ? <PlanMockup initialScreen="settings" onClose={() => window.location.assign('/')} /> : preview === 'loading' ? <ProgramLoading /> : ['onboarding', 'onboarding-focus'].includes(preview) ? <OnboardingFlow preview previewStartAtFocus={preview === 'onboarding-focus'} onComplete={() => window.location.assign('/')} /> : preview === 'manage-plan' ? <PlanMockup /> : <RootApp />}
   </React.StrictMode>,
 )
